@@ -1,0 +1,160 @@
+<!doctype html>
+<html>
+    <link rel="stylesheet" type="text/css" href="arl.css">
+    
+    <head>
+        <title>a roguelike</title>
+    </head>
+    
+    <body onload="ARL.init()">
+        
+        <div id="game_box">
+            <div id="stat_panel">
+                <!--
+                <br>
+                <button id="move_north" onclick="SIG('moveNorth')">
+                    Move North
+                </button>
+                <br>
+                <button id="move_east" onclick="SIG('moveEast')">
+                    Move East
+                </button>
+                <br>
+                <button id="move_south" onclick="SIG('moveSouth')">
+                    Move South
+                </button>
+                <br>
+                <button id="move_west" onclick="SIG('moveWest')">
+                    Move West
+                </button>
+                <br>
+                -->
+                <br>
+                <table>
+                    <tbody id='controls'>
+                        <tr>
+                            <td>
+                                <button class='numpad' onclick='SIG("queueInput", "numpad7")'>
+                                7
+                                </button>
+                            </td>
+                            <td>
+                                <button class='numpad' onclick='SIG("queueInput", "numpad8")'>
+                                8
+                                </button>
+                            </td>
+                            <td>
+                                <button class='numpad' onclick='SIG("queueInput", "numpad9")'>
+                                9
+                                </button>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>
+                                <button class='numpad' onclick='SIG("queueInput", "numpad4")'>
+                                4
+                                </button>
+                            </td>
+                            <td>
+                                <button class='numpad' onclick='SIG("queueInput", "numpad5")'>
+                                5
+                                </button>
+                            </td>
+                            <td>
+                                <button class='numpad' onclick='SIG("queueInput", "numpad6")'>
+                                6
+                                </button>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>
+                                <button class='numpad' onclick='SIG("queueInput", "numpad1")'>
+                                1
+                                </button>
+                            </td>
+                            <td>
+                                <button class='numpad' onclick='SIG("queueInput", "numpad2")'>
+                                2
+                                </button>
+                            </td>
+                            <td>
+                                <button class='numpad' onclick='SIG("queueInput", "numpad3")'>
+                                3
+                                </button>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+                <!--
+                <br>
+                <button id="ctrl_loop" class='in_panel' onclick="SIG('toggleLoop')">
+                    Start Game
+                </button>
+                <br>
+                <br>
+                <button id="loop_speed" class='in_panel' onclick="SIG('toggleLoopSpeed')">
+                    Speed Up
+                </button>
+                <br>
+                <br>
+                <code id="arl_stats" class='in_panel'></code>
+                <br>
+                <br>
+                <code id="p1_stats" class='in_panel'></code>
+                <br>
+                <br>
+                <code id="p2_stats" class='in_panel'></code>
+                <br>
+                <br>
+                <code id="p3_stats" class='in_panel'></code>
+                <br>
+                <br>
+                <code id="p4_stats" class='in_panel'></code>
+                <br>
+                <br>
+                <code id="p5_stats" class='in_panel'></code>
+                -->
+                <!--
+                <br>
+                <br>
+                <input id="box_short" type="checkbox">
+                    Shorter Lines
+                </input>
+                -->
+                
+            </div>
+            
+            <div id="map_panel">
+
+            </div>
+
+            <!--
+            <div id="msg_panel">
+                <!--
+                <code id="msg_feed">Welcome to ARL</code>
+                
+            </div>
+            -->
+        
+        </div>
+        
+    </body>
+    
+    <script src="ARL.js"></script>
+    <script src="ARL/BASE.js"></script>
+    <script src="ARL/Registry.js"></script>
+    <script src="ARL/Router.js"></script>
+    <script src="ARL/Util.js"></script>
+    <script src="ARL/Mob.js"></script>
+    <script src="ARL/Loop.js"></script>
+    <script src="ARL/View.js"></script>
+    <script src="ARL/World.js"></script>
+    <script src="ARL/Action.js"></script>
+    <script src="ARL/Agent.js"></script>
+    <script src="ARL/Turner.js"></script>
+    <script src="ARL/Input.js"></script>
+    <script src="ARL/Arena.js"></script>
+    <script src="ARL/Game.js"></script>
+    <script src="ARL/Narrator.js"></script>
+    
+</html>

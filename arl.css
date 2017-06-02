@@ -1,0 +1,94 @@
+@font-face {
+    font-family: monospace;
+}
+
+body {
+    font-family: monospace;
+    background-color: #283138;
+    margin: 0;
+    overflow: auto;
+}
+
+#controls tr td {
+    
+}
+
+.numpad {
+    width: 32px;
+    height: 32px;
+}
+
+#game_box {
+    /*
+    box-shadow: 0px 7px 0px 0px rgba(0,0,0,0.2);
+    */
+
+    margin: 20px;
+    
+    width: calc(100vw - 40px);
+    height: calc(100vh - 40px);
+    
+}
+
+#stat_panel{
+    color: lightgray;
+    background-color: #384148;
+    width: calc(30% - 10px);
+    height: inherit;
+    float: left;
+    box-shadow: 7px 7px rgba(0,0,0,0.4);
+}
+
+.hidden {
+    display: none;
+}
+
+#2p_start, #3p_start, #4p_start, #5p_start, #ctrl_loop, #loop_speed {
+    font-family: monospace;
+}
+
+#map_panel, #msg_panel {
+    color: lightgray;
+    background-color: #384148;
+    overflow: auto;
+    
+    width: calc(70% - 10px);
+    height: inherit;
+    float: right;
+    box-shadow: 7px 7px rgba(0,0,0,0.4);
+}
+
+#map_panel code {
+    font-size: 16px;
+    letter-spacing: 4px;
+    line-height: .8;
+    /*width: 16px;
+    height: 16px;*/
+    display: inline-block;
+}
+
+.in_panel {
+    position: relative;
+    left: 10px;
+}
+
+.map_zone, .msg_feed, #ein_stats, #p1_stats, #p2_stats, #p3_stats, #p4_stats, #p5_stats {
+    white-space: pre-wrap;
+}
+
+.msg_feed .redcard {
+    color: tomato;
+}
+
+.msg_feed .yellowcard {
+    color: khaki;
+}
+
+.msg_feed .bluecard {
+    color: skyblue;
+}
+
+.msg_feed .greencard {
+    color: lightgreen;
+}
+
