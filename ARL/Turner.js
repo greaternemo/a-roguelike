@@ -9,7 +9,7 @@ ARL.Turner.prototype.
 
 ARL.Turner.prototype.whoseTurnIsIt = function () {
     // pretty straightforward
-    let cFloor = GCON('CURRENT_FLOOR');
+    let cFloor = GCON('FLOOR_DATA')[GCON('CURRENT_FLOOR')];
     let mIdxA = null;
     let mIdxB = null;
     // we can add a speed system later, right now it's not strictly necessary
@@ -17,22 +17,23 @@ ARL.Turner.prototype.whoseTurnIsIt = function () {
     
     // ok, if the floor's last mob is false, it means that:
     // A: this is the player's first time on this floor, or
-    // B: this is a new game, in which case... see A.
-    if (GCON('FLOOR_DATA')[cFloor].fLastMob === false) {
-        if (GCON('FLOOR_DATA')[cFloor].fCurMob === false) {
-            GCON('FLOOR_DATA')[cFloor].fCurMob = GCON('PLAYER_MOB').mIdentity.iEid;
+    // B: this is a new game, in which case... see A, or
+    // C: the last mob died
+    if (cFloor.fLastMob === false) {
+        if (cFloor.fCurMob === false) {
+            cFloor.fCurMob = GCON('PLAYER_MOB').mIdentity.iEid;
         }
     }
     else {
-        mIdxA = GCON('FLOOR_DATA')[cFloor].fMobs.indexOf(GCON('FLOOR_DATA')[cFloor].fCurMob);
-        if (mIdxA + 1 === GCON('FLOOR_DATA')[cFloor].fMobs.length) {
+        mIdxA = cFloor.fMobs.indexOf(cFloor.fCurMob);
+        if (mIdxA + 1 === cFloor.fMobs.length) {
             mIdxB = 0;
         }
         else {
             mIdxB = mIdxA + 1;
         }
-        GCON('FLOOR_DATA')[cFloor].fLastMob = GCON('FLOOR_DATA')[cFloor].fMobs[mIdxA];
-        GCON('FLOOR_DATA')[cFloor].fNextMob = GCON('FLOOR_DATA')[cFloor].fMobs[mIdxB];
+        cFloor.fLastMob = cFloor.fMobs[mIdxA];
+        cFloor.fCurMob = cFloor.fMobs[mIdxB];
     }
 };
 

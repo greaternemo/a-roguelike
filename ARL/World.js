@@ -187,13 +187,79 @@ ARL.World.prototype.generateMob = function (aFloor) {
     return newMobId;
 };
 
-/*
-    'populateFirstFloor',
-    'populateFloor',
-    'generatePlayer',
-    'generateMobs',
-    'generateMob',
-*/
+ARL.World.prototype.mobDeath = function (deadMob) {
+    // rip in procgen
+    // purge the mob from everywhere it exists
+    // purge it from ALL_MOBS
+    GCON('ALL_MOBS').splice(GCON('ALL_MOBS').indexOf(deadMob), 1);
+    // purge it from the floor
+    let prevMob = null;
+    let prevMobIdx = null;
+    let prevPrevMob = null;
+    let prevPrevMobIdx = null;
+    let mobIdx = null;
+    let mobFloor = GET(deadMob).mPosition.pCurFloor;
+    let mobFloorData = GCON('FLOOR_DATA')[mobFloor];    
+    let mobLoc = GET(deadMob).mPosition.pLocXY;
+    let physLoc = GCON('PHYS_MAP')[mobFloor][mobLoc];
+
+    mobIdx = mobFloorData.fMobs.indexOf(deadMob);
+    if (mobIdx === 0) {
+        prevMobIdx = mobFloorData.fMobs.length - 1;
+    }
+    else {
+        prevMobIdx = mobIdx - 1;
+    }
+    prevMob = mobFloorData.fMobs[prevMobIdx];
+    
+    // gotta be sure to update the last/cur mobs so we don't break the turner
+    if (mobFloorData.fLastMob === deadMob) {
+        mobFloorData.fLastMob = prevMob;
+    }
+    if (mobFloorData.fCurMob === deadMob) {
+        mobFloorData.fCurMob = prevMob;
+        if (prevMobIdx === 0 ) {
+            prevPrevMobIdx = mobFloorData.fMobs.length - 1;
+        }
+        else {
+            prevPrevMobIdx = prevMobIdx - 1;
+        }
+        prevPrevMob = mobFloorData.fMobs[prevPrevMobIdx];
+        mobFloorData.fLastMob = prevPrevMob;
+    }
+    
+    physLoc.aBody = false;
+    mobFloorData.fMobs.splice(mobIdx, 1);
+    
+    // IT IS DONE
+    SIG('destroyEntity', aMob);
+    SIG('handleTileUpdates', mobLoc);
+};
+
+ARL.World.prototype.handleTileUpdates = function (uTiles) {
+    // the arguments to this function should ALWAYS be an array
+    let aLoc = null;
+    while (uTiles.length > 0) {
+        // order is irrelevant
+        aLoc = uTiles.shift();
+        SIG('updateCurrentGlyph', aLoc);
+        
+    }
+};
+
+ARL.World.prototype.updateCurrentGlyph = function (aLoc) {
+    let physTile = GCON('PHYS_MAP')[GCON('CURRENT_FLOOR')][aLoc];
+    if (physTile.aBody !== false) {
+        // draw the body if there is one
+        physTile.aGlyph = GCON('MOB_BASE')[GET(physTile.aBody).mIdentity.iType].mGlyph;
+    }
+    else {
+        // just draw the tile otherwise
+        physTile.aGlyph = GCON('TERRAIN_BASE')[physTile.aTerrain].tGlyph;
+    }
+    // mark the tile dirty
+    GCON('DIRTY_LOCS').push(aLoc);
+};
 
 
 

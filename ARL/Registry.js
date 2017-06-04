@@ -108,6 +108,16 @@ ARL.Registry.prototype.chaseDown = function (eid) {
     }
 };
 
+// Destroys an object and its eid
+ARL.Registry.prototype.destroyEntity = function (eid) {
+    this.primeMap.forEach(function (pVal, pKey, pMap) {
+        if (pVal === eid) {
+            pMap.set(pVal, false);
+        }
+    });
+    this.primeMap.delete(eid);
+};
+
 
 
 /*

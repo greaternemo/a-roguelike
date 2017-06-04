@@ -61,6 +61,7 @@ ARL.BASE = {
 
         // refs to the stuff at each loc
         physData: {},
+        // REPLACED BY PHYS_MAP
 
         // the loc strings that correspond to elems
         viewLocs: [],
@@ -69,6 +70,7 @@ ARL.BASE = {
         // values should be refs to code elements
         // we'll then dynamically alter the content of those elements
         viewElems: {},
+        // REPLACED BY VIEW_MAP
 
         // the elements at the ends of lines, so we don't mistake them
         // for physical locations that the player can visit
@@ -146,7 +148,12 @@ ARL.BASE = {
                 'movePlayerWest',
                 'useStairs',
                 'tryToMoveMobInDirection',
-                'moveMobInDirection',
+                'moveMobToLoc',
+                'doAHit',
+                'changeMobHPCur',
+                'changeMobState',
+                'changeMobStats',
+                'wasMobKilled',
         ],
         Agent: [
                 'compelMob',
@@ -187,6 +194,7 @@ ARL.BASE = {
                 'registerEntity',
                 'generateUeid',
                 'chaseDown',
+                'destroyEntity',
         ],
         Turner: [
                 // filler line
@@ -232,6 +240,9 @@ ARL.BASE = {
                 'generatePlayer',
                 'generateMobs',
                 'generateMob',
+                'mobDeath',
+                'handleTileUpdates',
+                'updateCurrentGlyph',
                 
         ],
     },
@@ -247,6 +258,7 @@ ARL.BASE = {
                 'LINE_ENDS',        // array of all view locs that are not phys locs
                 'PHYS_MAP',         // table of tables of phys locs, keyed by floor name
                 'VIEW_MAP',         // table of view locs, keyed by loc
+                'DIRTY_LOCS',       // list of view locs that need to be redrawn
                 'CURRENT_FLOOR',    // name of the floor the player is on
                 'FLOOR_LIST',       // array of floor names as strings
                 'FLOOR_DATA',       // table of tables of floor data, keyed by floor name
