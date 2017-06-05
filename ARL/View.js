@@ -2,25 +2,7 @@
 // For your draws
 
 ARL.View = function () {
-    this.panelMap = null;
-    this.panelStats = null;
-    this.panelFeed = null;
-
-    // any time we touch a physical loc, we throw it in the dirty pile
-    // on each loop, we redraw the dirty pile
-    this.dirtyMap = [];
-    this.drawDelay = (1000/30);
-    
-    // refactor this, for now I just want to see it work tho
-    this.mapLocs = ARL.BASE.RefData.viewLocs;
-    this.mapElems = ARL.BASE.RefData.viewElems;
-    this.lineEnds = ARL.BASE.RefData.lineEnds;
-    //this.floorLocs = ARL.BASE.RefData.physLocs;
-    this.floorData = ARL.BASE.RefData.physData;
-    this.aPlayer = {
-        atLoc: '10,10',
-        glyph: '@',
-    };
+    this.viewLoop = null;
     
     this.init();
 };
@@ -40,68 +22,71 @@ ARL.View.prototype.swapPanes = function () {
 */
 
 ARL.View.prototype.init = function () {
-    this.panelMap = document.getElementById('map_panel');
-    let locList = this.mapLocs.slice();
-    let cx = null;
-    let cy = null;
+    let viewLocs = GCON('VIEW_LOCS').slice();
+    let physLocs = GCON('PHYS_LOCS').slice();
+    let lineEnds = GCON('LINE_ENDS').slice();
+    let viewMap = {};
     let curLoc = null;
-    //console.log(this.floorData);
-    while (locList.length) {
-        curLoc = locList.shift();
-        if (this.lineEnds.indexOf(curLoc) === -1) {
-            cx = curLoc.split(',')[0];
-            cy = curLoc.split(',')[1];
-            this.panelMap.appendChild(this.mapElems[curLoc].vElem);
-            //console.log('curLoc = ' + curLoc);
-
-            if((cx === '0' || cx === '29') || (cy === '0' || cy === '29')) {
-                this.floorData[curLoc].aTerrain = 'wall';
-                this.mapElems[curLoc].vElem.textContent = GCON('TERRAIN_BASE').wall.tGlyph;
-            } else {
-                this.floorData[curLoc].aTerrain = 'floor';
-                this.mapElems[curLoc].vElem.textContent = GCON('TERRAIN_BASE').floor.tGlyph;
-            }
-        } else {
-            // GOTTA ADD THOSE LINE BREAKS YO
-            this.panelMap.appendChild(this.mapElems[curLoc].vElem);
-            // console.log('ignoring line end loc: ' + curLoc);
+    let mapPanel = SIG('byId', 'map_panel');
+    
+    // so first we create the VIEW_MAP
+    while (viewLocs.length > 0) {
+        // order is irrelevant, but I like to do it all by index ascending
+        curLoc = viewLocs.shift();
+        if (physLocs.indexOf(curLoc) !== -1) {
+            viewMap[curLoc] = {
+                vElem: document.createElement('code'),
+                vText: document.createTextNode('?'),
+            };
+            // don't forget to attach the content node to the visible node
+            viewMap[curLoc].vElem.appendChild(viewMap[curLoc].vText);
+        }
+        else if (lineEnds.indexOf(curLoc) !== -1) {
+            viewMap[curLoc] = {
+                vElem: document.createElement('br'),
+                vText: false,
+            };
         }
     }
-    // place player on the finished map
-    this.floorData[this.aPlayer.atLoc].aBody = this.aPlayer;
-    this.redrawTile(this.aPlayer.atLoc);
+    SCON('VIEW_MAP', viewMap);
+    curLoc = null;
+    
+    // then we draw the VIEW_MAP to the map panel
+    // slice off another copy of VIEW_LOCS
+    viewLocs = GCON('VIEW_LOCS').slice();
+    while (viewLocs.length > 0) {
+        // order is ABSOLUTELY IMPORTANT here.
+        curLoc = viewLocs.shift();
+        mapPanel.appendChild(GCON('VIEW_MAP')[curLoc].vElem);
+    }
+    
+    // then we create our DIRTY_LOCS array
+    SCON('DIRTY_LOCS', ['all']);
+    
+    // then we build our view loop
+    this.viewLoop = new ARL.Loop(function () {
+        return SIG('drawPhysMap');
+    }, GCON('LOOP_DELAY'));
 };
 
-
-
-ARL.View.prototype.moveNorth = function () { return this.moveInDir('N'); };
-ARL.View.prototype.moveEast  = function () { return this.moveInDir('E'); };
-ARL.View.prototype.moveSouth = function () { return this.moveInDir('S'); };
-ARL.View.prototype.moveWest  = function () { return this.moveInDir('W'); };
-
-ARL.View.prototype.moveInDir = function (aDir) {
-    let hereLoc = this.aPlayer.atLoc;
-    let thereLoc = ARL.BASE.RefData.sideRefs[hereLoc][aDir];
-    if (thereLoc === false) {
-        return;
-    }
-    if (this.floorData[thereLoc].aTerrain === 'wall') {
-        return;
-    }
-    this.floorData[hereLoc].aBody = false;
-    this.redrawTile(hereLoc);
-    this.floorData[thereLoc].aBody = this.aPlayer;
-    this.aPlayer.atLoc = thereLoc;
-    this.redrawTile(thereLoc);
-};
-
-ARL.View.prototype.redrawTile = function (tileLoc) {
-    let tileElem = this.mapElems[tileLoc].vElem;
-    let tilePhys = this.floorData[tileLoc];
-    if (tilePhys.aBody === false) {
-        tileElem.textContent = GCON('TERRAIN_BASE')[tilePhys.aTerrain].tGlyph;
-    } else {
-        tileElem.textContent = tilePhys.aBody.glyph;
+ARL.View.prototype.drawPhysMap = function () {
+    // we gon get drawn af
+    let dirtyLocs = GCON('DIRTY_LOCS');
+    let curLoc = null;
+    let physCurFloor = GCON('PHYS_MAP')[GCON('CURRENT_FLOOR')];
+    while (dirtyLocs.length > 0) {
+        // order is irrelevant, but I'm always going to shift to test for 'all'
+        curLoc = dirtyLocs.shift();
+        if (curLoc === 'all') {
+            // running handleTileUpdates on all phys locs does 2 things for us:
+            // 1: it updates the glyph on all tiles of the current floor, and
+            // 2: it autofills DIRTY_LOCS with every phys loc.
+            SIG('handleTileUpdates', GCON('PHYS_LOCS').slice());
+            dirtyLocs = GCON('DIRTY_LOCS');
+        }
+        else {
+            GCON('VIEW_MAP')[curLoc].vElem.textContent = physCurFloor[curLoc].aGlyph;
+        }
     }
 };
 

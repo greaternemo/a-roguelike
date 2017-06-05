@@ -157,6 +157,35 @@ ARL.World.prototype.findAWalkableTile = function (aFloor) {
     return SIG('randFromArray', wTiles);
 };
 
+ARL.World.prototype.findRandomWalkableSide = function (aLoc) {
+    let walkableDirs = SIG('findWalkableSides', aLoc);
+    return SIG('randFromArray', walkableDirs);
+};
+
+ARL.World.prototype.findWalkableSides = function (aLoc) {
+    let allDirs = GCON('ALL_DIRS').slice();
+    let aDir = null;
+    let walkableDirs = [];
+    while (allDirs.length > 0) {
+        // order is irrelevant
+        aDir = allDirs.shift();
+        if (SIG('isSideWalkable', [aLoc, aDir]) === true) {
+            walkableDirs.push(aDir);
+        }
+    }
+    return walkableDirs;
+};
+
+ARL.World.prototype.isSideWalkable = function (lData) {
+    let [aLoc, aSide] = lData;
+    let locToSide = GCON('SIDE_REFS')[aLoc][aSide];
+    if (locToSide === false) {
+        return false;
+    }
+    let floorMap = GCON('PHYS_MAP')[GCON('CURRENT_FLOOR')];
+    return GCON('TERRAIN_BASE')[floorMap[locToSide].aTerrain].tWalkable;
+};
+
 ARL.World.prototype.generatePlayer = function (aFloor) {
     let newPlayerMob = new ARL.Mob();
     // if I'm checking this anyway, there's no reason to add it to the mob itself
@@ -189,6 +218,7 @@ ARL.World.prototype.generateMob = function (aFloor) {
 
 ARL.World.prototype.mobDeath = function (deadMob) {
     // rip in procgen
+    let whoami = GET(deadMob).mIdentity.iType;
     // purge the mob from everywhere it exists
     // purge it from ALL_MOBS
     GCON('ALL_MOBS').splice(GCON('ALL_MOBS').indexOf(deadMob), 1);
@@ -232,8 +262,11 @@ ARL.World.prototype.mobDeath = function (deadMob) {
     mobFloorData.fMobs.splice(mobIdx, 1);
     
     // IT IS DONE
-    SIG('destroyEntity', aMob);
-    SIG('handleTileUpdates', mobLoc);
+    if (whoami === 'player') {
+        SCON('GAME_OVER', true);
+    }
+    SIG('destroyEntity', deadMob);
+    SIG('handleTileUpdates', [mobLoc]);
 };
 
 ARL.World.prototype.handleTileUpdates = function (uTiles) {

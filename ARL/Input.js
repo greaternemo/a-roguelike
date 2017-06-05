@@ -31,6 +31,9 @@ ARL.Input.prototype.queueInput = function (iStr) {
       GCON('PLAYER_TURN')   === true) {
         iBuffer.push(iStr);
     }
+    if (GCON('GAME_OVER') === true) {
+        return RIP();
+    }
     // shit that was simple
 };
 
@@ -87,6 +90,7 @@ ARL.Input.prototype.numpad5 = function () {
     // TODO
 
     // return SIG('useStairs');
+    return SIG('makeMobPassTheTurn');
 };
 
 ARL.Input.prototype.numpad6 = function () {

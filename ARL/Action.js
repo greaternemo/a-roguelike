@@ -18,60 +18,70 @@ ARL.Action.prototype.handleCurrentTurn = function () {
     SIG('compelMob', GCON('FLOOR_DATA')[GCON('CURRENT_FLOOR')].fCurMob);
 };
 
+ARL.Action.prototype.makeMobPassTheTurn = function () {
+    SCON('END_OF_TURN', true);
+    // IT IS REALLY THAT EASY RIGHT NOW, LMAO
+};
+
 ARL.Action.prototype.moveMobNorth = function (aMob) {
-    SIG('tryToMoveMobInDirection', [aMob, 'N']);
+    SIG('tryToMoveMobInDir', [aMob, 'N']);
 };
 
 ARL.Action.prototype.moveMobEast = function (aMob) {
-    SIG('tryToMoveMobInDirection', [aMob, 'E']);
+    SIG('tryToMoveMobInDir', [aMob, 'E']);
 };
 
 ARL.Action.prototype.moveMobSouth = function (aMob) {
-    SIG('tryToMoveMobInDirection', [aMob, 'S']);
+    SIG('tryToMoveMobInDir', [aMob, 'S']);
 };
 
 ARL.Action.prototype.moveMobWest = function (aMob) {
-    SIG('tryToMoveMobInDirection', [aMob, 'W']);
+    SIG('tryToMoveMobInDir', [aMob, 'W']);
 };
 
 ARL.Action.prototype.movePlayerNorth = function () {
-    SIG('tryToMoveMobInDirection', [GCON('PLAYER_MOB').mIdentity.iEid, 'N']);
+    SIG('tryToMoveMobInDir', [GCON('PLAYER_MOB').mIdentity.iEid, 'N']);
 };
 
 ARL.Action.prototype.movePlayerEast = function () {
-    SIG('tryToMoveMobInDirection', [GCON('PLAYER_MOB').mIdentity.iEid, 'E']);
+    SIG('tryToMoveMobInDir', [GCON('PLAYER_MOB').mIdentity.iEid, 'E']);
 };
 
 ARL.Action.prototype.movePlayerSouth = function () {
-    SIG('tryToMoveMobInDirection', [GCON('PLAYER_MOB').mIdentity.iEid, 'S']);
+    SIG('tryToMoveMobInDir', [GCON('PLAYER_MOB').mIdentity.iEid, 'S']);
 };
 
 ARL.Action.prototype.movePlayerWest = function () {
-    SIG('tryToMoveMobInDirection', [GCON('PLAYER_MOB').mIdentity.iEid, 'W']);
+    SIG('tryToMoveMobInDir', [GCON('PLAYER_MOB').mIdentity.iEid, 'W']);
 };
 
 ARL.Action.prototype.useStairs = function () {};
 
-ARL.Action.prototype.tryToMoveMobInDirection = function (mData) {
+ARL.Action.prototype.tryToMoveMobInDir = function (mData) {
     // Is there a wall there? If yes, don't move.
     // Is there a mob there? If yes, hit them and don't move.
     // If it's floor and there's nothing there, move there.
     let [aMob, aDir] = mData;
-    let locFrom = GET(aMob).mPosition.locXY;
+    let locFrom = GET(aMob).mPosition.pLocXY;
     let locTo = GCON('SIDE_REFS')[locFrom][aDir];
     let physLocTo = GCON('PHYS_MAP')[GCON('CURRENT_FLOOR')][locTo];
     if (GCON('TERRAIN_BASE')[physLocTo.aTerrain].tIsWalkable === false) {
         // can't walk there
+        // we immediately return to skip the EOT cleanup, which we only do
+        // after performing an action with finality
         return;
     }
     else if (physLocTo.aBody !== false) {
         // ya gotta fite em
-        return SIG('doAHit', [aMob, physLocTo.aBody]);
+        SIG('doAHit', [aMob, physLocTo.aBody]);
     }
     else {
         // move to the new loc
-        return SIG('moveMobToLoc', [aMob, locFrom, locTo]);
+        SIG('moveMobToLoc', [aMob, locFrom, locTo]);
     }
+    // if you did a hit or moved, those actions have finality and will trigger
+    // the end of the current turn.
+    SCON('END_OF_TURN', true);
 };
 
 ARL.Action.prototype.moveMobToLoc = function (mData) {
@@ -80,7 +90,7 @@ ARL.Action.prototype.moveMobToLoc = function (mData) {
     let physLocTo = GCON('PHYS_MAP')[GCON('CURRENT_FLOOR')][locTo];
     
     // update anything that needs to be updated, then signal those updates
-    GET(aMob).mPosition.locXY = newLoc;
+    GET(aMob).mPosition.pLocXY = locTo;
     physLocFrom.aBody = false;
     physLocTo.aBody = aMob;
     SIG('handleTileUpdates', [locFrom, locTo]);
@@ -91,7 +101,7 @@ ARL.Action.prototype.doAHit = function (fMobs) {
     let hitDamage = GET(aMob).mState.sStrTotal - GET(aVic).mState.sDefTotal;
     if (hitDamage > 0) {
         // note the mob as the last damage source, TODO
-        SIG('changeMobHPCur', [aVic, hitDamage]);
+        SIG('changeMobHPCur', [aVic, 0 - hitDamage]);
     }
     else {
         // mob whiffs, narrate it

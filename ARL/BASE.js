@@ -138,6 +138,7 @@ ARL.BASE = {
 
         Action: [
                 'handleCurrentTurn',
+                'makeMobPassTheTurn',
                 'moveMobNorth',
                 'moveMobEast',
                 'moveMobSouth',
@@ -147,7 +148,7 @@ ARL.BASE = {
                 'movePlayerSouth',
                 'movePlayerWest',
                 'useStairs',
-                'tryToMoveMobInDirection',
+                'tryToMoveMobInDir',
                 'moveMobToLoc',
                 'doAHit',
                 'changeMobHPCur',
@@ -157,6 +158,8 @@ ARL.BASE = {
         ],
         Agent: [
                 'compelMob',
+                'compelPlayer',
+                'compelGobbo',
         ],
         Game: [
                 // filler line
@@ -197,7 +200,6 @@ ARL.BASE = {
                 'destroyEntity',
         ],
         Turner: [
-                // filler line
                 'whoseTurnIsIt',
         ],
         Util: [
@@ -224,10 +226,7 @@ ARL.BASE = {
                 'detrio',
         ],
         View: [
-                'moveNorth',
-                'moveEast',
-                'moveSouth',
-                'moveWest',
+                'drawPhysMap',
         ],
         World: [
                 // filler line
@@ -237,6 +236,9 @@ ARL.BASE = {
                 'populateFirstFloor',
                 'populateFloor',
                 'findAWalkableTile',
+                'findRandomWalkableSide',
+                'findWalkableSides',
+                'isSideWalkable',
                 'generatePlayer',
                 'generateMobs',
                 'generateMob',
@@ -265,10 +267,13 @@ ARL.BASE = {
                 'TERRAIN_BASE',     // table of tables of terrain data, keyed by terrain name
                 'MOB_BASE',         // table of tables of mob data, keyed by mob type
                 'ALL_MOBS',         // array of eids for all mobs
+                'CUR_MOB_IDX',      // index of the mob whose turn it is in ALL_MOBS
                 'PLAYER_MOB',       // eid for the player mob
+                'GAME_OVER',        // is the player dead and do we need to start a new game
                 'INPUT_BUFFER',     // array of signals
                 'LISTEN_NUMPAD',    // bool, are we accepting numpad input
                 'PLAYER_TURN',      // bool, is it the player's turn
+                'END_OF_TURN',      // bool, is it time for end of turn cleanup
                 'READY_FOR_TURN',   // bool, has the last turn completed
 
     ],

@@ -19,10 +19,8 @@ ARL.Turner.prototype.whoseTurnIsIt = function () {
     // A: this is the player's first time on this floor, or
     // B: this is a new game, in which case... see A, or
     // C: the last mob died
-    if (cFloor.fLastMob === false) {
-        if (cFloor.fCurMob === false) {
-            cFloor.fCurMob = GCON('PLAYER_MOB').mIdentity.iEid;
-        }
+    if (cFloor.fCurMob === false) {
+        cFloor.fCurMob = GCON('PLAYER_MOB').mIdentity.iEid;
     }
     else {
         mIdxA = cFloor.fMobs.indexOf(cFloor.fCurMob);

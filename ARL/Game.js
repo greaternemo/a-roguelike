@@ -20,6 +20,11 @@ ARL.Game.prototype.init = function () {
     this.gameLoop = new ARL.Loop(function () {
         return SIG('doTheGame');
     }, GCON('LOOP_DELAY'));
+    SCON('GAME_OVER', false);
+    
+    // ARE YOU READYYYYY
+    // YES I'M READYYYYY
+    SCON('READY_FOR_TURN', true);
 };
 
 ARL.Game.prototype.doTheGame = function () {
@@ -30,7 +35,12 @@ ARL.Game.prototype.doTheGame = function () {
         SIG('doNextTurn');
         // check for win/loss?
         // do that here
+    }
+    // we'll do this here to integrate it into the existing loop
+    if (GCON('END_OF_TURN') === true && GCON('READY_FOR_TURN') === false) {
         // unlock the game loop
+        SCON('PLAYER_TURN', false);
+        SCON('END_OF_TURN', false);
         SCON('READY_FOR_TURN', true);
     }
 };

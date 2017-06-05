@@ -45,16 +45,30 @@ ARL.init = function () {
     ARL.aInput = new ARL.Input();
     ARL.aRouter.import('Input', ARL.aInput);
 
-    //ARL.aGame = new ARL.Game();
-    //ARL.aRouter.import('Game', ARL.aGame);
+    ARL.aGame = new ARL.Game();
+    ARL.aRouter.import('Game', ARL.aGame);
 
     //ARL.aNarr = new ARL.Narrator();
     //ARL.aRouter.import('Narrator', ARL.aNarr);
 
     // DON'T FORGET TO DO THIS
     ARL.aInput.inputLoop.engage();
-    // ARL.aGame.gameLoop.engage();
-    // ARL.aView.viewLoop.engage();
+    ARL.aView.viewLoop.engage();
+    ARL.aGame.gameLoop.engage();
+};
+
+ARL.restInPeace = function () {
+    // stop the loops
+    ARL.aInput.inputLoop.hardReset();
+    ARL.aView.viewLoop.hardReset();
+    ARL.aGame.gameLoop.hardReset();
+    // clear anything relevant
+    let mPanel = SIG('byId', 'map_panel');
+    while (mPanel.hasChildNodes() === true) {
+        mPanel.removeChild(mPanel.firstChild);
+    }
+    // and then do the whole thing all over again
+    return ARL.init();
 };
 
 function SIG(rSig, rParams) {
@@ -77,6 +91,9 @@ function SET(anEid, aValue) {
     return SIG('setEid', [anEid, aValue]);
 }
 
+function RIP() {
+    return ARL.restInPeace();
+}
 
 // hurk
 
