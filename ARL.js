@@ -30,6 +30,9 @@ ARL.init = function () {
     ARL.aView = new ARL.View();
     ARL.aRouter.import('View', ARL.aView);
 
+    ARL.aNarr = new ARL.Narrator();
+    ARL.aRouter.import('Narrator', ARL.aNarr);
+
     ARL.aWorld = new ARL.World();
     ARL.aRouter.import('World', ARL.aWorld);
 
@@ -48,9 +51,6 @@ ARL.init = function () {
     ARL.aGame = new ARL.Game();
     ARL.aRouter.import('Game', ARL.aGame);
 
-    //ARL.aNarr = new ARL.Narrator();
-    //ARL.aRouter.import('Narrator', ARL.aNarr);
-
     // DON'T FORGET TO DO THIS
     ARL.aInput.inputLoop.engage();
     ARL.aView.viewLoop.engage();
@@ -67,6 +67,7 @@ ARL.restInPeace = function () {
     while (mPanel.hasChildNodes() === true) {
         mPanel.removeChild(mPanel.firstChild);
     }
+    SIG('clearMsgPanel');
     // and then do the whole thing all over again
     return ARL.init();
 };

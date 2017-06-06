@@ -1,12 +1,7 @@
 // ARL.Action
 // For *simple* movement and combat
 
-ARL.Action = function () {
-    /*
-    this.p1.pStats = SIG('byId', 'p1_stats');
-    */
-    
-};
+ARL.Action = function () {};
 
 /*
 ARL.Action.prototype
@@ -64,8 +59,12 @@ ARL.Action.prototype.tryToMoveMobInDir = function (mData) {
     let [aMob, aDir] = mData;
     let locFrom = GET(aMob).mPosition.pLocXY;
     let locTo = GCON('SIDE_REFS')[locFrom][aDir];
+    if (locTo === false) {
+        // you can't walk off the map
+        return;
+    }
     let physLocTo = GCON('PHYS_MAP')[GCON('CURRENT_FLOOR')][locTo];
-    if (GCON('TERRAIN_BASE')[physLocTo.aTerrain].tIsWalkable === false) {
+    if (GCON('TERRAIN_BASE')[physLocTo.aTerrain].tWalkable === false) {
         // can't walk there
         // we immediately return to skip the EOT cleanup, which we only do
         // after performing an action with finality
@@ -136,6 +135,8 @@ ARL.Action.prototype.changeMobStats = function (sData) {
 
 ARL.Action.prototype.wasMobKilled = function (aMob) {
     if (GET(aMob).mState.sHPCur === 0) {
+        let dStr = 'The ' + GET(aMob).mIdentity.iType + ' dies!';
+        SIG('narrate', dStr);
         SIG('mobDeath', aMob);
     }
 };

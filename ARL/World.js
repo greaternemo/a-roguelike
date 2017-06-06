@@ -24,7 +24,8 @@ ARL.World.prototype.init = function () {
         // the order in which we do this is irrelevant, we could use pop()
         fThis = fList.shift();
         // GCON('PHYS_MAP')[fThis] = this.buildBasicFloorMap();
-        GCON('PHYS_MAP')[fThis] = this.buildGreatHallFloorMap();
+        // GCON('PHYS_MAP')[fThis] = this.buildGreatHallFloorMap();
+        GCON('PHYS_MAP')[fThis] = this.buildGobboctagonFloorMap();
         GCON('FLOOR_DATA')[fThis] = this.buildFloorData(fThis);
         // now with infinity percent more mobs!!!
         if (fThis === GCON('FLOOR_LIST')[0]) {
@@ -36,21 +37,29 @@ ARL.World.prototype.init = function () {
     }
 };
 
+ARL.World.prototype.generateBasicTile = function () {
+    let aTile = {
+        // string
+        locXY: null,
+        // mob or bool
+        aBody: false,
+        // must always be defined as a type
+        aTerrain: 'wall',
+        // calculated on the fly
+        aGlyph: '#',
+    };
+    return aTile;
+};
+
 ARL.World.prototype.buildFloorData = function (aFloor) {
     // blerg
     let fData = {
-        fName: null,
-        fMobs: null,
-        fLastMob: null,
-        fCurMob: null,
-        fItems: null,
+        fName: aFloor,
+        fMobs: [],
+        fLastMob: false,
+        fCurMob: false,
+        fItems: [],
     };
-    fData.fName = aFloor;
-    fData.fMobs = [];
-    fData.fLastMob = false;
-    fData.fCurMob = false;
-    fData.fItems = [];
-
     return fData;
 };
 
@@ -61,16 +70,7 @@ ARL.World.prototype.buildBasicFloorMap = function () {
     let physLocs = GCON('PHYS_LOCS').slice();
     while (physLocs.length) {
         newLoc = physLocs.shift();
-        newTile = {
-            // string
-            locXY: null,
-            // mob or bool
-            aBody: false,
-            // must always be defined as a type
-            aTerrain: 'wall',
-            // calculated on the fly
-            aGlyph: '#',
-        };
+        newTile = this.generateBasicTile();
         newTile.locXY = newLoc;
         newFloorMap[newLoc] = newTile;
     }
@@ -86,21 +86,55 @@ ARL.World.prototype.buildGreatHallFloorMap = function () {
     let physLocs = GCON('PHYS_LOCS').slice();
     while (physLocs.length) {
         newLoc = physLocs.shift();
-        newTile = {
-            // string
-            locXY: null,
-            // mob or bool
-            aBody: false,
-            // must always be defined as a type
-            aTerrain: 'wall',
-            // calculated on the fly
-            aGlyph: '#',
-        };
+        newTile = this.generateBasicTile();
         newTile.locXY = newLoc;
         nX = newLoc.split(',')[0];
         nY = newLoc.split(',')[1];
         // this needs to be refactored so that your values aren't hard-coded
         if((nX === '0' || nX === '29') || (nY === '0' || nY === '29')) {
+            newTile.aTerrain = 'wall';
+            newTile.aGlyph = '#';
+        } else {
+            newTile.aTerrain = 'floor';
+            newTile.aGlyph = '.';
+        }
+        newFloorMap[newLoc] = newTile;
+    }
+    return newFloorMap;
+};
+
+ARL.World.prototype.buildGobboctagonFloorMap = function () {
+    // WELCOME TO THE GOBBOCTAGON
+    let newFloorMap = {};
+    let newTile = null;
+    let newLoc = null;
+    let nX = null;
+    let nY = null;
+    let physLocs = GCON('PHYS_LOCS').slice();
+    let octaLocs = GCON('PHYS_LOCS').slice();
+    let octagon = [];
+    while (octaLocs.length) {
+        newLoc = octaLocs.shift();
+        [nX, nY] = newLoc.split(',');
+        if ((9 < parseInt(nX) && parseInt(nX) < 20) && (12 < parseInt(nY) && parseInt(nY) < 17)) {
+            octagon.push(newLoc);
+        }
+        else if ((10 < parseInt(nX) && parseInt(nX) < 19) && (11 < parseInt(nY) && parseInt(nY) < 18)) {
+            octagon.push(newLoc);
+        }
+        else if ((11 < parseInt(nX) && parseInt(nX) < 18) && (10 < parseInt(nY) && parseInt(nY) < 19)) {
+            octagon.push(newLoc);
+        }
+        else if ((12 < parseInt(nX) && parseInt(nX) < 17) && (9 < parseInt(nY) && parseInt(nY) < 20)) {
+            octagon.push(newLoc);
+        }
+    }
+    while (physLocs.length) {
+        newLoc = physLocs.shift();
+        newTile = this.generateBasicTile();
+        newTile.locXY = newLoc;
+        // this needs to be refactored so that your values aren't hard-coded
+        if(octagon.indexOf(newLoc) === -1) {
             newTile.aTerrain = 'wall';
             newTile.aGlyph = '#';
         } else {

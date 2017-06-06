@@ -183,8 +183,8 @@ ARL.BASE = {
         Narrator: [
                 'narrate',
                 'colorrate',
-                'clearFeed',
-                'dub',
+                'clearMsgPanel',
+                'lineBreak',
                 'addLine',
                 'addColorLine',
         ],
@@ -230,9 +230,11 @@ ARL.BASE = {
         ],
         World: [
                 // filler line
+                'generateBasicTile',
                 'buildFloorData',
                 'buildBasicFloorMap',
                 'buildGreatHallFloorMap',
+                'buildGobboctagonFloorMap',
                 'populateFirstFloor',
                 'populateFloor',
                 'findAWalkableTile',
