@@ -11,6 +11,14 @@ ARL.BASE = {
             xw: 30,
             yh: 30,
         },
+        nodeSize: {
+            nWidth: 10,
+            nHeight: 10,
+        },
+        gridSize: {
+            gWidth: 3,
+            gHeight: 3,
+        },
 
         // Flags
         listenNumpad: true,
@@ -59,18 +67,14 @@ ARL.BASE = {
         // the loc strings that correspond to physical locations
         physLocs: [],
 
-        // refs to the stuff at each loc
-        physData: {},
-        // REPLACED BY PHYS_MAP
-
         // the loc strings that correspond to elems
         viewLocs: [],
-
-        // should be keyed to loc strings
-        // values should be refs to code elements
-        // we'll then dynamically alter the content of those elements
-        viewElems: {},
-        // REPLACED BY VIEW_MAP
+        
+        // the loc strings that correspond to grid nodes
+        gridLocs: [],
+        
+        // the loc strings that correspond to a single grid node's interior
+        nodeLocs: [],
 
         // the elements at the ends of lines, so we don't mistake them
         // for physical locations that the player can visit
@@ -224,6 +228,7 @@ ARL.BASE = {
                 'depair',
                 'entrio',
                 'detrio',
+                'generateLocsForGrid',
         ],
         View: [
                 'drawPhysMap',
@@ -231,6 +236,7 @@ ARL.BASE = {
         World: [
                 // filler line
                 'generateBasicTile',
+                'generateGridAndNodeLocs',
                 'buildFloorData',
                 'buildBasicFloorMap',
                 'buildGreatHallFloorMap',
@@ -254,14 +260,20 @@ ARL.BASE = {
     Constants: [
                 // filler line
                 'LOOP_DELAY',       // standard loop delay in ms
+                'MAP_SIZE',         // height and width of the map in tiles
+                'NODE_SIZE',        // height and width of a node in tiles
+                'GRID_SIZE',        // height and width of a floor grid in nodes
                 'ALL_DIRS',         // array of all dirs as single character strings
                 'SIDE_DELTAS',      // table of deltas for each dir
                 'SIDE_REFS',        // table of adjacent locs for each loc
                 'PHYS_LOCS',        // array of all representable physical locs
                 'VIEW_LOCS',        // array of all renderable map locs
+                'GRID_LOCS',        // array of locs for grid nodes for map generation
+                'NODE_LOCS',        // array of relative locs within each grid node
                 'LINE_ENDS',        // array of all view locs that are not phys locs
                 'PHYS_MAP',         // table of tables of phys locs, keyed by floor name
                 'VIEW_MAP',         // table of view locs, keyed by loc
+                'GRID_MAP',         // tables of node locs to target phys locs, keyed by grid loc
                 'DIRTY_LOCS',       // list of view locs that need to be redrawn
                 'CURRENT_FLOOR',    // name of the floor the player is on
                 'FLOOR_LIST',       // array of floor names as strings
@@ -279,15 +291,43 @@ ARL.BASE = {
                 'READY_FOR_TURN',   // bool, has the last turn completed
 
     ],
+    
+    /*
+    Additional details for Constants
+    
+    GRID_MAP is a table with values keyed to grid locs.
+    The values in GRID_MAP are also tables.
+    Each of those tables have node locs as the keys and the related phys locs as the values.
+    GRID_MAP: {
+        '0,0': {
+            '0,0': '0,0',
+            '1,0': '1,0',
+            ...
+        },
+        '1,0': {
+            '0,0': '10,0',
+            '1,0': '11,0',
+            '2,0': '12,0',
+            ...
+        },
+        ...
+    }
+    
+    */
 
     Schema: {
         // filler line
         LOOP_DELAY:     'loopDelay',
+        MAP_SIZE:       'mapSize',
+        NODE_SIZE:      'nodeSize',
+        GRID_SIZE:      'gridSize',
         ALL_DIRS:       'allDirs',
         SIDE_DELTAS:    'dirDeltas',
         SIDE_REFS:      'sideRefs',
         PHYS_LOCS:      'physLocs',
         VIEW_LOCS:      'viewLocs',
+        GRID_LOCS:      'gridLocs',
+        NODE_LOCS:      'nodeLocs',
         LINE_ENDS:      'lineEnds',
         FLOOR_LIST:     'floorList',
         TERRAIN_BASE:   'terrainBase',
@@ -358,6 +398,12 @@ function genSidesFromDeltas(rxyp) {
 }
 
 // generate all the locRef strings as 'x,y' pairs
+// IMPORTANT!!!!!
+// To keep the lists of locs consistent, we always generate them in the same order:
+// The outer loop increments the Y value, the inner loop increments the X.
+// Functionally, the list of locs this generates will always start at the top left
+// and will go to the right through each row before continuing at the start of the
+// next row down.
 let dx = 0;
 let dy = 0;
 let xyp = null;
@@ -370,23 +416,6 @@ for (dy = 0; dy < ARL.BASE.RefData.mapSize.yh; dy += 1) {
         ARL.BASE.RefData.physLocs.push(xyp);
         // push to viewLocs, check
         ARL.BASE.RefData.viewLocs.push(xyp);
-        // add to physData, check
-        ARL.BASE.RefData.physData[xyp] = {
-            // string
-            locXY: null,
-            // integer
-            aBody: false,
-            aTerrain: 'wall',
-        };
-        ARL.BASE.RefData.physData[xyp].locXY = xyp;
-        // add to viewElems, check
-        ARL.BASE.RefData.viewElems[xyp] = {
-            vElem: document.createElement('code'),
-            vText: document.createTextNode('#'),
-        };
-        // assign text node to element
-        ARL.BASE.RefData.viewElems[xyp].vElem.appendChild(
-            ARL.BASE.RefData.viewElems[xyp].vText);
     }
     xyp = '' + ARL.BASE.RefData.mapSize.xw.toString() + ',' + dy.toString();
     // push to allLocs, check
@@ -394,12 +423,6 @@ for (dy = 0; dy < ARL.BASE.RefData.mapSize.yh; dy += 1) {
     // do NOT push to physLocs
     // push to viewLocs, check
     ARL.BASE.RefData.viewLocs.push(xyp);
-    // do NOT add to physData
-    // add to viewElems, check
-    ARL.BASE.RefData.viewElems[xyp] = {
-        vElem: document.createElement('br'),
-        vText: false
-    };
     // push to lineEnds, check
     ARL.BASE.RefData.lineEnds.push(xyp);
 }

@@ -173,7 +173,35 @@ ARL.Util.prototype.detrio = function (dxyzv) {
     return trioXYZ;
 };
 
+// IMPORTANT!!!!!
+// To keep the lists of locs consistent, we always generate them in the same order:
+// The outer loop increments the Y value, the inner loop increments the X.
+// Functionally, the list of locs this generates will always start at the top left
+// and will go to the right through each row before continuing at the start of the
+// next row down.
 
+ARL.Util.prototype.generateLocsForGrid = function (gInfo) {
+    /*
+    gInfo should be in this form:
+        gInfo = {
+            xMin: 0,
+            xMax: 10,
+            yMin: 0,
+            yMax: 10,
+        }
+    */
+    let newLocs = [];
+    let dx = null;
+    let dy = null;
+    let xyp = null;
+    for (dy = gInfo.yMin; dy < gInfo.yMax; dy += 1) {
+        for (dx = gInfo.xMin; dx < gInfo.xMax; dx += 1) {
+            xyp = '' + dx.toString() + ',' + dy.toString();
+            newLocs.push(xyp);
+        }
+    }
+    return newLocs;
+};
 
 
 

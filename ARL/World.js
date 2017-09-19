@@ -51,6 +51,67 @@ ARL.World.prototype.generateBasicTile = function () {
     return aTile;
 };
 
+ARL.World.prototype.generateGridAndNodeLocs = function () {
+    // generate the node locs and grid locs and the conversion table for them
+    let gridSize = GCON('GRID_SIZE');
+    SCON('GRID_LOCS', SIG('generateLocsForGrid', {
+        xMin: 0,
+        xMax: gridSize.gWidth,
+        yMin: 0,
+        yMax: gridSize.gHeight,
+    }));
+
+    let nodeSize = GCON('NODE_SIZE');
+    // an array of locs between '0,0' and '10,10', inclusive
+    // later we'll need to translate these based on the gridLoc
+    // e.g., '0,0' in node '1,1' will become '10,10'
+    // this will be something like
+    // NW corner is (nodeLoc * gridLoc),(nodeLoc * gridLoc)
+    // NE corner is ((nodeLoc * (gridLoc + 1)) - 1),(nodeLoc * gridLoc)
+    // SE corner is ((nodeLoc * (gridLoc + 1)) - 1),((nodeLoc * (gridLoc + 1)) - 1)
+    // SW corner is (nodeLoc * gridLoc),((nodeLoc * (gridLoc + 1)) - 1)
+    SCON('NODE_LOCS', SIG('generateLocsForGrid', {
+        xMin: 0,
+        xMax: nodeSize.nWidth,
+        yMin: 0,
+        yMax: nodeSize.nHeight,
+    }));
+    
+    let gridLocs = GCON('GRID_LOCS').slice();
+    let nodeLocs = GCON('NODE_LOCS').slice();
+    
+    // then we assemble and assign the grid map
+    let gridMap = {};
+    let aGridLoc = null;
+    let aNodeLoc = null;
+    let aPhysLoc = null;
+    let gIdx = null;
+    let gLen = gridLocs.length;
+    let nIdx = null;
+    let nLen = nodeLocs.length;
+    let gdx = null;
+    let gdy = null;
+    let ndx = null;
+    let ndy = null;
+    let pdx = null;
+    let pdy = null;
+    
+    for (gIdx = 0; gIdx < gLen; gIdx += 1) {
+        aGridLoc = gridLocs[gIdx];
+        gridMap[aGridLoc] = {};
+        for (nIdx = 0; nIdx < nLen; nIdx += 1) {
+            aNodeLoc = nodeLocs[nIdx];
+            [gdx, gdy] = aGridLoc.split(',');
+            [ndx, ndy] = aNodeLoc.split(',');
+            pdx = (parseInt(gdx) * parseInt(ndx)) + parseInt(ndx);
+            pdy = (parseInt(gdy) * parseInt(ndy)) + parseInt(ndy);
+            aPhysLoc = pdx.toString() + ',' + pdy.toString();
+            gridMap[aGridLoc][aNodeLoc] = aPhysLoc;
+        }
+    }
+    SCON('GRID_MAP', gridMap);
+};
+
 ARL.World.prototype.buildFloorData = function (aFloor) {
     // blerg
     let fData = {
@@ -144,6 +205,18 @@ ARL.World.prototype.buildGobboctagonFloorMap = function () {
         newFloorMap[newLoc] = newTile;
     }
     return newFloorMap;
+};
+
+ARL.World.prototype.generateFloorLayout = function (aFloor) {
+    // TODO, moving a lot of the loc generation to ARL.BASE
+    
+    // Now we start this, the most grave of tasks
+    aFloor = null; // fix this ok
+    
+    // Ok, what in heck do we care about?
+    let floorOuterWall = [];
+    let roomInnerTiles = [];
+    let roomOuterTiles = [];
 };
 
 ARL.World.prototype.populateFirstFloor = function (aFloor) {
