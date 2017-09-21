@@ -9,7 +9,7 @@ ARL.Turner.prototype.
 
 ARL.Turner.prototype.whoseTurnIsIt = function () {
     // pretty straightforward
-    let cFloor = GCON('FLOOR_DATA')[GCON('CURRENT_FLOOR')];
+    let cFloor = GCON('FLOOR_MAP')[GCON('CURRENT_FLOOR')];
     let mIdxA = null;
     let mIdxB = null;
     // we can add a speed system later, right now it's not strictly necessary

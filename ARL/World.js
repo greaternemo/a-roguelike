@@ -16,7 +16,7 @@ ARL.World.prototype.
 ARL.World.prototype.init = function () {
     // build the world framework
     SCON('PHYS_MAP', {});
-    SCON('FLOOR_DATA', {});
+    SCON('FLOOR_MAP', {});
     SCON('ALL_MOBS', []);
     let fList = GCON('FLOOR_LIST').slice();
     let fThis = null;
@@ -26,7 +26,7 @@ ARL.World.prototype.init = function () {
         // GCON('PHYS_MAP')[fThis] = this.buildBasicFloorMap();
         // GCON('PHYS_MAP')[fThis] = this.buildGreatHallFloorMap();
         GCON('PHYS_MAP')[fThis] = this.buildGobboctagonFloorMap();
-        GCON('FLOOR_DATA')[fThis] = this.buildFloorData(fThis);
+        GCON('FLOOR_MAP')[fThis] = this.buildFloorData(fThis);
         // now with infinity percent more mobs!!!
         if (fThis === GCON('FLOOR_LIST')[0]) {
             this.populateFirstFloor(fThis);

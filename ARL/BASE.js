@@ -7,6 +7,7 @@ ARL.BASE = {
 
         loopDelay: (1000/30),
 
+        /*
         mapSize: {
             xw: 30,
             yh: 30,
@@ -19,7 +20,8 @@ ARL.BASE = {
             gWidth: 3,
             gHeight: 3,
         },
-
+        */
+        
         // Flags
         listenNumpad: true,
         playerTurn: false,
@@ -27,6 +29,12 @@ ARL.BASE = {
 
         // allDirs: ['N', 'E', 'S', 'W', 'U', 'D'],
         allDirs: ['N', 'E', 'S', 'W'],
+        opposingDirs: {
+            N: 'S',
+            E: 'W',
+            S: 'N',
+            W: 'E',
+        },
         dirDeltas: {
             N: {
                 x: 0,
@@ -71,10 +79,12 @@ ARL.BASE = {
         viewLocs: [],
         
         // the loc strings that correspond to grid nodes
-        gridLocs: [],
+        // REFACTORING THESE INTO INDIVIDUAL LAYOUTS AS NEEDED
+        // gridLocs: [],
         
         // the loc strings that correspond to a single grid node's interior
-        nodeLocs: [],
+        // REFACTORING THESE INTO INDIVIDUAL LAYOUTS AS NEEDED
+        // nodeLocs: [],
 
         // the elements at the ends of lines, so we don't mistake them
         // for physical locations that the player can visit
@@ -84,17 +94,55 @@ ARL.BASE = {
         // keyed to loc strings
         // values should be objects with loc strings for each adjacent loc
         sideRefs: {},
+        
+        // asdf
+        physBase: {
+            mapSize: {
+                mWidth: 30,
+                mHeight: 30,
+            },
+            layoutSize: {
+                lWidth: 28,
+                lHeight: 28,
+            },
+            layoutOffset: {
+                xOffset: 1,
+                yOffset: 1,
+            },
+        },
+        
+        // asdf
+        viewBase: {
+            mapSize: {
+                mWidth: 30,
+                mHeight: 30,
+            },
+        },
+        
+        // not implemented, a list of all the keys in terrainBase
+        terrainList: [
+            'floor',
+            'wall',
+        ],
 
         terrainBase: {
             floor: {
-                tWalkable: true,
                 tGlyph: '.',
+                tSeeThru: true,
+                tWalkable: true,
             },
             wall: {
-                tWalkable: false,
                 tGlyph: '#',
+                tSeeThru: false,
+                tWalkable: false,
             },
         },
+        
+        // not implemented, a list of all the keys in mobBase
+        mobList: [
+            'player',
+            'gobbo',
+        ],
 
         mobBase: {
             player: {
@@ -110,11 +158,11 @@ ARL.BASE = {
         },
 
         floorList: [
-                    'floor1',
-                    'floor2',
+            'floor1',
+            'floor2',
         ],
 
-        worldFloors: {
+        floorBase: {
             floor1: {
                 stairsUp: false,
                 stairsDown: 'floor2',
@@ -123,21 +171,193 @@ ARL.BASE = {
                 stairsUp: 'floor1',
                 stairsDown: false,
             }
-        }
-
+        },
+        
+        layoutList: [
+            'basic',
+            'greatHall',
+            'gobboctagon',
+            'standard',
+        ],
+        
+        layoutBase: {
+            basic: {},
+            greatHall: {},
+            gobboctagon: {},
+            standard: {
+                gridSize: {
+                    gWidth: 7,
+                    gHeight: 7,
+                },
+                nodeSize: {
+                    nWidth: 4,
+                    nHeight: 4,
+                },
+            },
+        },
+        
+        mapgenBase: {
+            baseLayout: [
+                "#..#",
+                "....",
+                "....",
+                "#..#",
+            ],
+            emptyRoom: [
+                "....",
+                "....",
+                "....",
+                "....",
+            ],
+            allWalls: [
+                "####",
+                "####",
+                "####",
+                "####",
+            ],
+            nodeLayouts: {
+                '000A': [
+                    "....",
+                    "....",
+                    "....",
+                    "....",
+                ],
+                '0000': [
+                    "#..#",
+                    "....",
+                    "....",
+                    "#..#",
+                ],
+                '0001': [
+                    "#..#",
+                    "#...",
+                    "#...",
+                    "#..#",
+                ],
+                '0010': [
+                    "#..#",
+                    "....",
+                    "....",
+                    "####",
+                ],
+                '0011': [
+                    "#..#",
+                    "#...",
+                    "#...",
+                    "####",
+                ],
+                '0100': [
+                    "#..#",
+                    "...#",
+                    "...#",
+                    "#..#",
+                ],
+                '0101': [
+                    "#..#",
+                    "#..#",
+                    "#..#",
+                    "#..#",
+                ],
+                '0110': [
+                    "#..#",
+                    "...#",
+                    "...#",
+                    "####",
+                ],
+                '0111': [
+                    "#..#",
+                    "#..#",
+                    "#..#",
+                    "####",
+                ],
+                '1000': [
+                    "####",
+                    "....",
+                    "....",
+                    "#..#",
+                ],
+                '1001': [
+                    "####",
+                    "#...",
+                    "#...",
+                    "#..#",
+                ],
+                '1010': [
+                    "####",
+                    "....",
+                    "....",
+                    "####",
+                ],
+                '1011': [
+                    "####",
+                    "#...",
+                    "#...",
+                    "####",
+                ],
+                '1100': [
+                    "####",
+                    "...#",
+                    "...#",
+                    "#..#",
+                ],
+                '1101': [
+                    "####",
+                    "#..#",
+                    "#..#",
+                    "#..#",
+                ],
+                '1110': [
+                    "####",
+                    "...#",
+                    "...#",
+                    "####",
+                ],
+                '1111': [
+                    "####",
+                    "####",
+                    "####",
+                    "####",
+                ],
+            },
+            layoutNames: [
+                'corridors',
+                'ends',
+                'corners',
+                'junctions',
+            ],
+            layouts: {
+                corridors: [
+                    "1010",
+                    "0101",
+                ],
+                ends: [
+                    "1110",
+                    "0111",
+                    "1011",
+                    "1101",
+                ],
+                corners: [
+                    "1001",
+                    "1100",
+                    "0110",
+                    "0011",
+                ],
+                junctions: [
+                    "1000",
+                    "0100",
+                    "0010",
+                    "0001",
+                ],
+            },
+            transitions: {
+                corridors: ["corridors", "corners", "ends", "junctions"],
+                ends: ["corridors", "corners", "junctions"],
+                corners: ["corridors", "corners", "junctions", "ends"],
+                junctions: ["corridors", "corners", "ends"],
+            },
+        },
     },
     
-    Templates: {
-
-        // NONE OF THESE NEED TEMPLATES
-        // NEMO GET YOUR FUCKING LIFE TOGETHERRRRRR
-        Arena: {},
-        Game: {},
-        Narrator: {},
-        Util: {},
-
-    },
-
     Routes: {
 
         Action: [
@@ -165,6 +385,9 @@ ARL.BASE = {
                 'compelPlayer',
                 'compelGobbo',
         ],
+        Fov: [
+                // filler line
+        ],
         Game: [
                 // filler line
                 'doTheGame',
@@ -183,6 +406,9 @@ ARL.BASE = {
                 'numpad7',
                 'numpad8',
                 'numpad9',
+        ],
+        Mapgen: [
+                // filler line
         ],
         Narrator: [
                 'narrate',
@@ -257,38 +483,68 @@ ARL.BASE = {
         ],
     },
     
+    /*
+    
+    Constant naming conventions:
+    
+    dir: A direction. Includes cardinal directions and up/down.
+    loc: A location, as coordinates. Generally a string in the form 'X,Y' or 'X,Y,Z'.
+    map: An abstraction meant as a collection of generated and/or state data.
+    
+    <>_LIST: An array containing all the keys for the corresponding BASE table.
+    <>_BASE: A table containing base data for object generation.
+    <>_LOCS: An array containing all relevant locs for a specific map.
+    <>_MAP: A table containing generated and/or state data
+    
+    */
+    
     Constants: [
                 // filler line
-                'LOOP_DELAY',       // standard loop delay in ms
-                'MAP_SIZE',         // height and width of the map in tiles
-                'NODE_SIZE',        // height and width of a node in tiles
-                'GRID_SIZE',        // height and width of a floor grid in nodes
-                'ALL_DIRS',         // array of all dirs as single character strings
-                'SIDE_DELTAS',      // table of deltas for each dir
-                'SIDE_REFS',        // table of adjacent locs for each loc
-                'PHYS_LOCS',        // array of all representable physical locs
-                'VIEW_LOCS',        // array of all renderable map locs
-                'GRID_LOCS',        // array of locs for grid nodes for map generation
-                'NODE_LOCS',        // array of relative locs within each grid node
-                'LINE_ENDS',        // array of all view locs that are not phys locs
-                'PHYS_MAP',         // table of tables of phys locs, keyed by floor name
-                'VIEW_MAP',         // table of view locs, keyed by loc
-                'GRID_MAP',         // tables of node locs to target phys locs, keyed by grid loc
-                'DIRTY_LOCS',       // list of view locs that need to be redrawn
-                'CURRENT_FLOOR',    // name of the floor the player is on
-                'FLOOR_LIST',       // array of floor names as strings
-                'FLOOR_DATA',       // table of tables of floor data, keyed by floor name
-                'TERRAIN_BASE',     // table of tables of terrain data, keyed by terrain name
-                'MOB_BASE',         // table of tables of mob data, keyed by mob type
-                'ALL_MOBS',         // array of eids for all mobs
-                'CUR_MOB_IDX',      // index of the mob whose turn it is in ALL_MOBS
-                'PLAYER_MOB',       // eid for the player mob
-                'GAME_OVER',        // is the player dead and do we need to start a new game
-                'INPUT_BUFFER',     // array of signals
-                'LISTEN_NUMPAD',    // bool, are we accepting numpad input
-                'PLAYER_TURN',      // bool, is it the player's turn
-                'END_OF_TURN',      // bool, is it time for end of turn cleanup
-                'READY_FOR_TURN',   // bool, has the last turn completed
+                'LOOP_DELAY',       // ro, float, standard loop delay in ms
+                //'MAP_SIZE',         // ro, table, height and width of the map in tiles
+                //'NODE_SIZE',        // ro, height and width of a node in tiles
+                //'GRID_SIZE',        // ro, height and width of a floor grid in nodes
+                'ALL_DIRS',         // ro, array, all dirs as single character strings
+                'OPPOSING_DIRS',    // ro, table, opposing cardinal dirs, keyed by dir
+                'SIDE_DELTAS',      // ro, table, deltas for each dir
+                'SIDE_REFS',        // ro, table, adjacent locs for each loc
+
+                'PHYS_BASE',        // ro, table, tables of phys map base data
+                'PHYS_LOCS',        // ro, array, all representable physical locs
+                'PHYS_MAP',         // rw, table, tables of phys locs, keyed by floor name
+
+                'VIEW_BASE',        // ro, table, tables of view map base data
+                'VIEW_LOCS',        // ro, array, all renderable map locs
+                'VIEW_MAP',         // rw, table, view elements, keyed by view loc
+                //'GRID_LOCS',        // ro, array, locs for grid nodes for map generation
+                //'NODE_LOCS',        // ro, array, relative locs within each grid node
+                'LINE_ENDS',        // ro, array, all view locs that are not phys locs
+                //'GRID_MAP',         // ro, table, tables of node locs to target phys locs, keyed by grid loc
+                'DIRTY_LOCS',       // rw, array, view locs that need to be redrawn
+
+                'CURRENT_FLOOR',    // rw, string, name of the floor the player is on
+                'FLOOR_LIST',       // ro, array, floor names as strings
+                'FLOOR_BASE',       // ro, table, tables of floor base data, keyed by floor name
+                'FLOOR_MAP',        // rw, table, tables of calculated floor data, keyed by floor name
+
+                'LAYOUT_LIST',      // ro, array, map layout names as strings
+                'LAYOUT_BASE',      // ro, table, tables of map layout data, keyed by floor name
+
+                'TERRAIN_LIST',     // ro, array, terrain types as strings
+                'TERRAIN_BASE',     // ro, table, tables of terrain data, keyed by terrain name
+
+                'MOB_LIST',         // ro, array, mob types as strings
+                'MOB_BASE',         // ro, table, tables of mob data, keyed by mob type
+                'ALL_MOBS',         // rw, array, eids for all mobs
+                'CUR_MOB_IDX',      // rw, int, index of the mob whose turn it is in ALL_MOBS
+                'PLAYER_MOB',       // rw, int, eid for the player mob
+
+                'GAME_OVER',        // rw, bool, is the player dead and do we need to start a new game
+                'INPUT_BUFFER',     // rw, array, signals waiting to be processed
+                'LISTEN_NUMPAD',    // rw, bool, are we accepting numpad input
+                'PLAYER_TURN',      // rw, bool, is it the player's turn
+                'END_OF_TURN',      // rw, bool, is it time for end of turn cleanup
+                'READY_FOR_TURN',   // rw, bool, has the last turn completed
 
     ],
     
@@ -318,20 +574,35 @@ ARL.BASE = {
     Schema: {
         // filler line
         LOOP_DELAY:     'loopDelay',
-        MAP_SIZE:       'mapSize',
-        NODE_SIZE:      'nodeSize',
-        GRID_SIZE:      'gridSize',
+        //MAP_SIZE:       'mapSize',
+        //NODE_SIZE:      'nodeSize',
+        //GRID_SIZE:      'gridSize',
         ALL_DIRS:       'allDirs',
+        OPPOSING_DIRS:  'opposingDirs',
         SIDE_DELTAS:    'dirDeltas',
         SIDE_REFS:      'sideRefs',
+
+        PHYS_BASE:      'physBase',
         PHYS_LOCS:      'physLocs',
+
+        VIEW_BASE:      'viewBase',
         VIEW_LOCS:      'viewLocs',
-        GRID_LOCS:      'gridLocs',
-        NODE_LOCS:      'nodeLocs',
+        //GRID_LOCS:      'gridLocs',
+        //NODE_LOCS:      'nodeLocs',
         LINE_ENDS:      'lineEnds',
+
         FLOOR_LIST:     'floorList',
+        FLOOR_BASE:     'floorBase',
+
+        LAYOUT_LIST:    'layoutList',
+        LAYOUT_BASE:    'layoutBase',
+
+        TERRAIN_LIST:   'terrainList',
         TERRAIN_BASE:   'terrainBase',
+
+        MOB_LIST:       'mobList',
         MOB_BASE:       'mobBase',
+
         LISTEN_NUMPAD:  'listenNumpad',
         PLAYER_TURN:    'playerTurn',
         READY_FOR_TURN: 'readyForTurn',
@@ -349,6 +620,7 @@ function genSidesFromDeltas(rxyp) {
     let sideObj = {};
     let sideDirs = ['N', 'E', 'S', 'W'];
     let dDeltas = ARL.BASE.RefData.dirDeltas;
+    let mSize = ARL.BASE.RefData.viewBase.mapSize;
     for (aIdx = 0; aIdx < sideDirs.length; aIdx += 1) {
         aDir = sideDirs[aIdx];
         adp = {
@@ -366,7 +638,7 @@ function genSidesFromDeltas(rxyp) {
                 }
                 break;
             case 'E':
-                if (adp.x >= (ARL.BASE.RefData.mapSize.xw - 1)) {
+                if (adp.x >= (mSize.mWidth - 1)) {
                     sideObj.E = false;
                 } else {
                     adp.x += dDeltas[aDir].x;
@@ -375,7 +647,7 @@ function genSidesFromDeltas(rxyp) {
                 }
                 break;
             case 'S':
-                if (adp.y >= (ARL.BASE.RefData.mapSize.yh - 1)) {
+                if (adp.y >= (mSize.mHeight - 1)) {
                     sideObj.S = false;
                 } else {
                     adp.x += dDeltas[aDir].x;
@@ -407,32 +679,33 @@ function genSidesFromDeltas(rxyp) {
 let dx = 0;
 let dy = 0;
 let xyp = null;
-for (dy = 0; dy < ARL.BASE.RefData.mapSize.yh; dy += 1) {
-    for (dx = 0; dx < ARL.BASE.RefData.mapSize.xw; dx += 1) {
+let rData = ARL.BASE.RefData;
+for (dy = 0; dy < rData.viewBase.mapSize.mHeight; dy += 1) {
+    for (dx = 0; dx < rData.viewBase.mapSize.mWidth; dx += 1) {
         xyp = '' + dx.toString() + ',' + dy.toString();
         // push to allLocs, check
-        ARL.BASE.RefData.allLocs.push(xyp);
+        rData.allLocs.push(xyp);
         // push to physLocs, check
-        ARL.BASE.RefData.physLocs.push(xyp);
+        rData.physLocs.push(xyp);
         // push to viewLocs, check
-        ARL.BASE.RefData.viewLocs.push(xyp);
+        rData.viewLocs.push(xyp);
     }
-    xyp = '' + ARL.BASE.RefData.mapSize.xw.toString() + ',' + dy.toString();
+    xyp = '' + rData.viewBase.mapSize.mWidth.toString() + ',' + dy.toString();
     // push to allLocs, check
-    ARL.BASE.RefData.allLocs.push(xyp);
+    rData.allLocs.push(xyp);
     // do NOT push to physLocs
     // push to viewLocs, check
-    ARL.BASE.RefData.viewLocs.push(xyp);
+    rData.viewLocs.push(xyp);
     // push to lineEnds, check
-    ARL.BASE.RefData.lineEnds.push(xyp);
+    rData.lineEnds.push(xyp);
 }
 
 // build the siderefs for those locs
-let pLocs = ARL.BASE.RefData.physLocs.slice();
+let pLocs = rData.physLocs.slice();
 let myLoc = null;
 while (pLocs.length) {
     myLoc = pLocs.shift();
-    ARL.BASE.RefData.sideRefs[myLoc] = genSidesFromDeltas(myLoc);
+    rData.sideRefs[myLoc] = genSidesFromDeltas(myLoc);
 }
 
 

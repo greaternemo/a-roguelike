@@ -10,7 +10,7 @@ ARL.Action.prototype
 ARL.Action.prototype.handleCurrentTurn = function () {
     // asdf
     // let theMob = GET(aMob);
-    SIG('compelMob', GCON('FLOOR_DATA')[GCON('CURRENT_FLOOR')].fCurMob);
+    SIG('compelMob', GCON('FLOOR_MAP')[GCON('CURRENT_FLOOR')].fCurMob);
 };
 
 ARL.Action.prototype.makeMobPassTheTurn = function () {
