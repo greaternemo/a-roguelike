@@ -95,6 +95,9 @@ ARL.BASE = {
         // values should be objects with loc strings for each adjacent loc
         sideRefs: {},
         
+        //asdf
+        gridSideRefs: {},
+        
         // asdf
         physBase: {
             mapSize: {
@@ -189,10 +192,12 @@ ARL.BASE = {
                     gWidth: 7,
                     gHeight: 7,
                 },
+                gridLocs: [],
                 nodeSize: {
                     nWidth: 4,
                     nHeight: 4,
                 },
+                nodeLocs: [],
             },
         },
         
@@ -508,6 +513,7 @@ ARL.BASE = {
                 'OPPOSING_DIRS',    // ro, table, opposing cardinal dirs, keyed by dir
                 'SIDE_DELTAS',      // ro, table, deltas for each dir
                 'SIDE_REFS',        // ro, table, adjacent locs for each loc
+                'GRID_SIDE_REFS',   // ro, table, tables of adjacent locs for each grid loc, keyed by grid dimensions
 
                 'PHYS_BASE',        // ro, table, tables of phys map base data
                 'PHYS_LOCS',        // ro, array, all representable physical locs
@@ -581,6 +587,7 @@ ARL.BASE = {
         OPPOSING_DIRS:  'opposingDirs',
         SIDE_DELTAS:    'dirDeltas',
         SIDE_REFS:      'sideRefs',
+        GRID_SIDE_REFS: 'gridSideRefs',
 
         PHYS_BASE:      'physBase',
         PHYS_LOCS:      'physLocs',
@@ -609,8 +616,31 @@ ARL.BASE = {
     },
 };
 
+function generateLocs(gInfo) {
+    /*
+    gInfo should be in this form:
+        gInfo = {
+            xMin: 0,
+            xMax: 10,
+            yMin: 0,
+            yMax: 10,
+        }
+    */
+    let newLocs = [];
+    let dx = null;
+    let dy = null;
+    let xyp = null;
+    for (dy = gInfo.yMin; dy < gInfo.yMax; dy += 1) {
+        for (dx = gInfo.xMin; dx < gInfo.xMax; dx += 1) {
+            xyp = '' + dx.toString() + ',' + dy.toString();
+            newLocs.push(xyp);
+        }
+    }
+    return newLocs;
+}
+
 // just what it says on the tin
-function genSidesFromDeltas(rxyp) {
+function genSidesFromDeltas(rxyp, aWidth, aHeight) {
     // index for sideDirs
     let aIdx = 0;
     // holds depaired direction object
@@ -620,7 +650,7 @@ function genSidesFromDeltas(rxyp) {
     let sideObj = {};
     let sideDirs = ['N', 'E', 'S', 'W'];
     let dDeltas = ARL.BASE.RefData.dirDeltas;
-    let mSize = ARL.BASE.RefData.viewBase.mapSize;
+    //let mSize = ARL.BASE.RefData.viewBase.mapSize;
     for (aIdx = 0; aIdx < sideDirs.length; aIdx += 1) {
         aDir = sideDirs[aIdx];
         adp = {
@@ -638,7 +668,7 @@ function genSidesFromDeltas(rxyp) {
                 }
                 break;
             case 'E':
-                if (adp.x >= (mSize.mWidth - 1)) {
+                if (adp.x >= (aWidth - 1)) {
                     sideObj.E = false;
                 } else {
                     adp.x += dDeltas[aDir].x;
@@ -647,7 +677,7 @@ function genSidesFromDeltas(rxyp) {
                 }
                 break;
             case 'S':
-                if (adp.y >= (mSize.mHeight - 1)) {
+                if (adp.y >= (aHeight - 1)) {
                     sideObj.S = false;
                 } else {
                     adp.x += dDeltas[aDir].x;
@@ -701,12 +731,40 @@ for (dy = 0; dy < rData.viewBase.mapSize.mHeight; dy += 1) {
 }
 
 // build the siderefs for those locs
+let mSize = rData.viewBase.mapSize;
 let pLocs = rData.physLocs.slice();
 let myLoc = null;
 while (pLocs.length) {
     myLoc = pLocs.shift();
-    rData.sideRefs[myLoc] = genSidesFromDeltas(myLoc);
+    rData.sideRefs[myLoc] = genSidesFromDeltas(myLoc, mSize.mWidth, mSize.mHeight);
 }
+
+let gSize = rData.layoutBase.standard.gridSize;
+rData.layoutBase.standard.gridLocs = generateLocs({
+    xMin: 0,
+    xMax: gSize.gWidth,
+    yMin: 0,
+    yMax: gSize.gHeight,
+});
+
+let gStr = gSize.gWidth.toString() + 'x' + gSize.gHeight.toString();
+rData.gridSideRefs[gStr] = {};
+// This will populate GRID_SIDE_REFS['7x7']
+let gRefs = rData.gridSideRefs[gStr];
+let gLocs = rData.layoutBase.standard.gridLocs.slice();
+myLoc = null;
+while (gLocs.length) {
+    myLoc = gLocs.shift();
+    gRefs[myLoc] = genSidesFromDeltas(myLoc, gSize.gWidth, gSize.gHeight);
+}
+
+let nSize = rData.layoutBase.standard.nodeSize;
+rData.layoutBase.standard.nodeLocs = generateLocs({
+    xMin: 0,
+    xMax: nSize.nWidth,
+    yMin: 0,
+    yMax: nSize.nHeight,
+});
 
 
 

@@ -227,7 +227,7 @@ ARL.World.prototype.populateFirstFloor = function (aFloor) {
     // note the phys loc as occupied
     GCON('PHYS_MAP')[aFloor][GCON('PLAYER_MOB').mPosition.pLocXY].aBody = newMobId;
     // add the mob to the floor's mob array
-    GCON('FLOOR_DATA')[aFloor].fMobs.push(newMobId);
+    GCON('FLOOR_MAP')[aFloor].fMobs.push(newMobId);
     // now do the nonplayer mobs
     this.populateFloor(aFloor);
 };
@@ -240,7 +240,7 @@ ARL.World.prototype.populateFloor = function (aFloor) {
         newMobId = this.generateMob(aFloor);
         GET(newMobId).mPosition.pLocXY = this.findAWalkableTile(aFloor);
         GCON('PHYS_MAP')[aFloor][GET(newMobId).mPosition.pLocXY].aBody = newMobId;
-        GCON('FLOOR_DATA')[aFloor].fMobs.push(newMobId);
+        GCON('FLOOR_MAP')[aFloor].fMobs.push(newMobId);
     }
 };
 
@@ -336,7 +336,7 @@ ARL.World.prototype.mobDeath = function (deadMob) {
     let prevPrevMobIdx = null;
     let mobIdx = null;
     let mobFloor = GET(deadMob).mPosition.pCurFloor;
-    let mobFloorData = GCON('FLOOR_DATA')[mobFloor];    
+    let mobFloorData = GCON('FLOOR_MAP')[mobFloor];    
     let mobLoc = GET(deadMob).mPosition.pLocXY;
     let physLoc = GCON('PHYS_MAP')[mobFloor][mobLoc];
 
