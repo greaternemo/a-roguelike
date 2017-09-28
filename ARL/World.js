@@ -47,6 +47,12 @@ ARL.World.prototype.generateBasicTile = function () {
         aTerrain: 'wall',
         // calculated on the fly
         aGlyph: '#',
+        // calculated on the fly
+        // false is the default, enabled true for testing
+        aKnown: false,
+        //aKnown: true,
+        // calculated on the fly
+        aVisible: false,
     };
     return aTile;
 };
@@ -54,7 +60,7 @@ ARL.World.prototype.generateBasicTile = function () {
 ARL.World.prototype.generateGridAndNodeLocs = function () {
     // generate the node locs and grid locs and the conversion table for them
     let gridSize = GCON('GRID_SIZE');
-    SCON('GRID_LOCS', SIG('generateLocsForGrid', {
+    SCON('GRID_LOCS', SIG('generateLocs', {
         xMin: 0,
         xMax: gridSize.gWidth,
         yMin: 0,
@@ -70,7 +76,7 @@ ARL.World.prototype.generateGridAndNodeLocs = function () {
     // NE corner is ((nodeLoc * (gridLoc + 1)) - 1),(nodeLoc * gridLoc)
     // SE corner is ((nodeLoc * (gridLoc + 1)) - 1),((nodeLoc * (gridLoc + 1)) - 1)
     // SW corner is (nodeLoc * gridLoc),((nodeLoc * (gridLoc + 1)) - 1)
-    SCON('NODE_LOCS', SIG('generateLocsForGrid', {
+    SCON('NODE_LOCS', SIG('generateLocs', {
         xMin: 0,
         xMax: nodeSize.nWidth,
         yMin: 0,
@@ -382,6 +388,9 @@ ARL.World.prototype.handleTileUpdates = function (uTiles) {
     while (uTiles.length > 0) {
         // order is irrelevant
         aLoc = uTiles.shift();
+        if (!GCON('GAME_OVER')) {
+            SIG('checkTileVisibility', aLoc);
+        }
         SIG('updateCurrentGlyph', aLoc);
         
     }
@@ -389,8 +398,8 @@ ARL.World.prototype.handleTileUpdates = function (uTiles) {
 
 ARL.World.prototype.updateCurrentGlyph = function (aLoc) {
     let physTile = GCON('PHYS_MAP')[GCON('CURRENT_FLOOR')][aLoc];
-    if (physTile.aBody !== false) {
-        // draw the body if there is one
+    if (physTile.aBody !== false && physTile.aVisible === true) {
+        // draw the body if there is one and the tile is visible
         physTile.aGlyph = GCON('MOB_BASE')[GET(physTile.aBody).mIdentity.iType].mGlyph;
     }
     else {
@@ -398,8 +407,31 @@ ARL.World.prototype.updateCurrentGlyph = function (aLoc) {
         physTile.aGlyph = GCON('TERRAIN_BASE')[physTile.aTerrain].tGlyph;
     }
     // mark the tile dirty
-    GCON('DIRTY_LOCS').push(aLoc);
+    //GCON('DIRTY_LOCS').push(aLoc);
+    SIG('addToDirtyLoad', [aLoc]);
 };
+
+ARL.World.prototype.checkTileVisibility = function (aLoc) {
+    let physTile = GCON('PHYS_MAP')[GCON('CURRENT_FLOOR')][aLoc];
+    let knownLocs = GCON('PLAYER_MOB').mVision.vKnownLocs;
+    let inViewLocs = GCON('PLAYER_MOB').mVision.vInViewLocs;
+    
+    // if we haven't seen it at all, it's shrouded in darkness
+    if (knownLocs.indexOf(aLoc) === -1) {
+        physTile.aKnown = false;
+        physTile.aVisible = false;
+    }
+    // if we have seen it, it's not dark, but is it in view?
+    else {
+        physTile.aKnown = true;
+        if (inViewLocs.indexOf(aLoc) === -1) {
+            physTile.aVisible = false;
+        }
+        else {
+            physTile.aVisible = true;
+        }
+    }
+}
 
 
 

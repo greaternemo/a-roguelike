@@ -9,6 +9,7 @@ var ARL = {
     // Systems
     aAction: null,
     aAgent: null,
+    aFov: null,
     aGame: null,
     aInput: null,
     aNarr: null,
@@ -35,6 +36,9 @@ ARL.init = function () {
 
     ARL.aWorld = new ARL.World();
     ARL.aRouter.import('World', ARL.aWorld);
+    
+    ARL.aFov = new ARL.Fov();
+    ARL.aRouter.import('Fov', ARL.aFov);
 
     ARL.aAction = new ARL.Action();
     ARL.aRouter.import('Action', ARL.aAction);
@@ -50,6 +54,10 @@ ARL.init = function () {
 
     ARL.aGame = new ARL.Game();
     ARL.aRouter.import('Game', ARL.aGame);
+    
+    // We have some init bits that need to be done out of import order
+    SIG('updateVisibility');
+    SIG('drawPhysMap');
 
     // DON'T FORGET TO DO THIS
     ARL.aInput.inputLoop.engage();
@@ -63,10 +71,13 @@ ARL.restInPeace = function () {
     ARL.aView.viewLoop.hardReset();
     ARL.aGame.gameLoop.hardReset();
     // clear anything relevant
+    // we very do not need this anymore
+    /*
     let mPanel = SIG('byId', 'map_panel');
     while (mPanel.hasChildNodes() === true) {
         mPanel.removeChild(mPanel.firstChild);
     }
+    */
     SIG('clearMsgPanel');
     // and then do the whole thing all over again
     return ARL.init();

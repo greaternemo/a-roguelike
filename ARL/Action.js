@@ -13,8 +13,18 @@ ARL.Action.prototype.handleCurrentTurn = function () {
     SIG('compelMob', GCON('FLOOR_MAP')[GCON('CURRENT_FLOOR')].fCurMob);
 };
 
-ARL.Action.prototype.makeMobPassTheTurn = function () {
+ARL.Action.prototype.endCurrentTurn = function () {
+    if (!GCON('GAME_OVER')) {
+        SIG('updateVisibility');
+    }
+    if (GCON('DIRTY_LOAD').length > 0) {
+        SIG('pushDirtyLoad');
+    }
     SCON('END_OF_TURN', true);
+}
+
+ARL.Action.prototype.makeMobPassTheTurn = function () {
+    SIG('endCurrentTurn');
     // IT IS REALLY THAT EASY RIGHT NOW, LMAO
 };
 
@@ -80,7 +90,7 @@ ARL.Action.prototype.tryToMoveMobInDir = function (mData) {
     }
     // if you did a hit or moved, those actions have finality and will trigger
     // the end of the current turn.
-    SCON('END_OF_TURN', true);
+    SIG('endCurrentTurn');
 };
 
 ARL.Action.prototype.moveMobToLoc = function (mData) {
@@ -92,6 +102,7 @@ ARL.Action.prototype.moveMobToLoc = function (mData) {
     GET(aMob).mPosition.pLocXY = locTo;
     physLocFrom.aBody = false;
     physLocTo.aBody = aMob;
+    //SIG('updateVisibility');
     SIG('handleTileUpdates', [locFrom, locTo]);
 };
 

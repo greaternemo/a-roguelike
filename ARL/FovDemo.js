@@ -40,6 +40,7 @@ var mapSize = {
 
 var VIEW_ZONE = null;
 
+/*
 function generateLocsAndMaps () {
   let dx = null;
   let dy = null;
@@ -97,7 +98,9 @@ function generateLocsAndMaps () {
     }
   }
 };
+*/
 
+/*
 function genSideRefs() {
 	let allDirs = null;
   let curDir = null;
@@ -126,6 +129,7 @@ function genSideRefs() {
     }
   }
 };
+*/
 
 function updateGlyph(aLoc) {
 	if (PHYS_MAP[aLoc].tBody !== false) {

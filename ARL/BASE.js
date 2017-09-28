@@ -120,6 +120,13 @@ ARL.BASE = {
                 mWidth: 30,
                 mHeight: 30,
             },
+            cellSize: {
+                cWidth: 14,
+                cHeight: 16,
+            },
+            cellOffset: {
+                cLeft: 2,
+            },
         },
         
         // not implemented, a list of all the keys in terrainBase
@@ -367,6 +374,7 @@ ARL.BASE = {
 
         Action: [
                 'handleCurrentTurn',
+                'endCurrentTurn',
                 'makeMobPassTheTurn',
                 'moveMobNorth',
                 'moveMobEast',
@@ -392,6 +400,10 @@ ARL.BASE = {
         ],
         Fov: [
                 // filler line
+                'buildRings',
+                'addArcToRange',
+                'checkRangeForArc',
+                'updateVisibility',
         ],
         Game: [
                 // filler line
@@ -459,10 +471,25 @@ ARL.BASE = {
                 'depair',
                 'entrio',
                 'detrio',
-                'generateLocsForGrid',
+                'generateLocs',
+                'fracSum',
+                'fracDiff',
+                'fracGreaterOf',
+                'fracLesserOf',
+                'fracEqualTo',
+                'fracGreaterThan',
+                'fracLesserThan',
+                'fracGreaterOrEqual',
+                'fracLesserOrEqual',
+                'intGreaterOf',
+                'intLesserOf',
         ],
         View: [
                 'drawPhysMap',
+                'handleCellUpdates',
+                'drawTileToMap',
+                'addToDirtyLoad',
+                'pushDirtyLoad',
         ],
         World: [
                 // filler line
@@ -484,6 +511,7 @@ ARL.BASE = {
                 'mobDeath',
                 'handleTileUpdates',
                 'updateCurrentGlyph',
+                'checkTileVisibility',
                 
         ],
     },
@@ -527,6 +555,8 @@ ARL.BASE = {
                 'LINE_ENDS',        // ro, array, all view locs that are not phys locs
                 //'GRID_MAP',         // ro, table, tables of node locs to target phys locs, keyed by grid loc
                 'DIRTY_LOCS',       // rw, array, view locs that need to be redrawn
+                'DIRTY_LOAD',       // rw, array, view locs that need to be redrawn
+                'READY_TO_DRAW',    // rw, bool, is the map ready to attempt a redraw
 
                 'CURRENT_FLOOR',    // rw, string, name of the floor the player is on
                 'FLOOR_LIST',       // ro, array, floor names as strings
@@ -720,6 +750,7 @@ for (dy = 0; dy < rData.viewBase.mapSize.mHeight; dy += 1) {
         // push to viewLocs, check
         rData.viewLocs.push(xyp);
     }
+    /*
     xyp = '' + rData.viewBase.mapSize.mWidth.toString() + ',' + dy.toString();
     // push to allLocs, check
     rData.allLocs.push(xyp);
@@ -728,6 +759,7 @@ for (dy = 0; dy < rData.viewBase.mapSize.mHeight; dy += 1) {
     rData.viewLocs.push(xyp);
     // push to lineEnds, check
     rData.lineEnds.push(xyp);
+    */
 }
 
 // build the siderefs for those locs

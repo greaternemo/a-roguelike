@@ -12,6 +12,11 @@ ARL.Mob = function () {
         pLocXY: null,
         pCurFloor: null,
     };
+    this.mVision = {
+        vFov: 5,
+        vKnownLocs: [],
+        vInViewLocs: [],
+    },
     /*
     this.mInventory = {
         iCarried: null,

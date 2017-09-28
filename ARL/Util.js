@@ -142,7 +142,8 @@ ARL.Util.prototype.scrollToNew = function (panel) {
     return;
 };
 
-ARL.Util.prototype.enpair = function (dxv, dyv) {
+ARL.Util.prototype.enpair = function (params) {
+    let [dxv, dyv] = params;
     let pairStr = '';
     pairStr += dxv.toString() + ',' + dyv.toString();
     return pairStr;
@@ -156,7 +157,8 @@ ARL.Util.prototype.depair = function (dxyv) {
     return pairXY;
 };
 
-ARL.Util.prototype.entrio = function (dxv, dyv, dzv) {
+ARL.Util.prototype.entrio = function (params) {
+    let [dxv, dyv, dzv] = params;
     let trioStr = '';
     trioStr += dxv.toString() + ',';
     trioStr += dyv.toString() + ',';
@@ -180,7 +182,7 @@ ARL.Util.prototype.detrio = function (dxyzv) {
 // and will go to the right through each row before continuing at the start of the
 // next row down.
 
-ARL.Util.prototype.generateLocsForGrid = function (gInfo) {
+ARL.Util.prototype.generateLocs = function(gInfo) {
     /*
     gInfo should be in this form:
         gInfo = {
@@ -203,14 +205,151 @@ ARL.Util.prototype.generateLocsForGrid = function (gInfo) {
     return newLocs;
 };
 
+/*
+ARL.Util.prototype.
+*/
+
+ARL.Util.prototype.fracSum = function(params) {
+    let [frA, frB] = params;
+    let frSum = [null, null];
+    if (frA[1] === frB[1]) {
+        // matching denominators, we don't have to split these any further
+        frSum[0] = frA[0] + frB[0];
+        frSum[1] = frA[1];
+    } else {
+        frSum[0] = (frA[0] * frB[1]) + (frB[0] * frA[1]);
+        frSum[1] = frA[1] * frB[1];
+    }
+    return frSum;
+};
+
+ARL.Util.prototype.fracDiff = function(params) {
+    let [frA, frB] = params;
+    let frDiff = [null, null];
+    if (frA[1] === frB[1]) {
+        // matching denominators, we don't have to split these any further
+        frDiff[0] = frA[0] - frB[0];
+        frDiff[1] = frA[1];
+    } else {
+        frDiff[0] = (frA[0] * frB[1]) - (frB[0] * frA[1]);
+        frDiff[1] = frA[1] * frB[1];
+    }
+    return frDiff;
+};
+
+ARL.Util.prototype.fracGreaterOf = function(params) {
+    let [frA, frB] = params;
+    let frY = frA[0] * frB[1];
+    let frZ = frB[0] * frA[1];
+    if (frY === frZ) {
+        return frB
+    } else if (frY > frZ) {
+        return frA;
+    } else if (frY < frZ) {
+        return frB;
+    }
+};
+
+ARL.Util.prototype.fracLesserOf = function(params) {
+    let [frA, frB] = params;
+    let frY = frA[0] * frB[1];
+    let frZ = frB[0] * frA[1];
+    if (frY === frZ) {
+        return frB
+    } else if (frY > frZ) {
+        return frB;
+    } else if (frY < frZ) {
+        return frA;
+    }
+};
+
+ARL.Util.prototype.fracEqualTo = function(params) {
+    let [frA, frB] = params;
+    let frY = frA[0] * frB[1];
+    let frZ = frB[0] * frA[1];
+    if (frY === frZ) {
+        return true;
+    } else {
+        return false;
+    }
+};
+
+ARL.Util.prototype.fracGreaterThan = function(params) {
+    let [frA, frB] = params;
+    let frY = frA[0] * frB[1];
+    let frZ = frB[0] * frA[1];
+    if (frY > frZ) {
+        return true;
+    } else {
+        return false;
+    }
+};
+
+ARL.Util.prototype.fracLesserThan = function(params) {
+    let [frA, frB] = params;
+    let frY = frA[0] * frB[1];
+    let frZ = frB[0] * frA[1];
+    if (frY < frZ) {
+        return true;
+    } else {
+        return false;
+    }
+};
+
+ARL.Util.prototype.fracGreaterOrEqual = function(params) {
+    let [frA, frB] = params;
+    let frY = frA[0] * frB[1];
+    let frZ = frB[0] * frA[1];
+    if (frY > frZ || frY === frZ) {
+        return true;
+    } else {
+        return false;
+    }
+};
+
+ARL.Util.prototype.fracLesserOrEqual = function(params) {
+    let [frA, frB] = params;
+    let frY = frA[0] * frB[1];
+    let frZ = frB[0] * frA[1];
+    if (frY < frZ || frY === frZ) {
+        return true;
+    } else {
+        return false;
+    }
+};
+
+ARL.Util.prototype.intGreaterOf = function(params) {
+    let [intA, intB] = params;
+    if (intA === intB) {
+        return intB;
+    } else if (intA > intB) {
+        return intA;
+    } else if (intA < intB) {
+        return intB;
+    }
+};
+
+ARL.Util.prototype.intLesserOf = function(params) {
+    let [intA, intB] = params;
+    if (intA === intB) {
+        return intB;
+    } else if (intA > intB) {
+        return intB;
+    } else if (intA < intB) {
+        return intA;
+    }
+};
+
+
+
 
 
 /*
-*
-*
-*
-* Courtesy Space
-*
-*
-*
-*/
+ *
+ *
+ *
+ * Courtesy Space
+ *
+ *
+ *
+ */

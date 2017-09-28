@@ -66,6 +66,10 @@ body {
     display: inline-block;
 }
 
+#map_panel #map_buffer {
+    display: none;
+}
+
 .in_panel {
     position: relative;
     left: 10px;
