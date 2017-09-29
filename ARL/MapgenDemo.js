@@ -229,6 +229,7 @@ var TRANSITIONS = {
 
 var VIEW_ZONE = null;
 
+/*
 function buildMapGrid() {
     let dx = null;
     let dy = null;
@@ -362,6 +363,7 @@ function genSideRefs() {
         }
     }
 };
+*/
 
 function getNodeSides(aLoc) {
     let allSides = {};
@@ -544,6 +546,9 @@ function getLayoutType(aLayout) {
     }
 };
 
+/////
+
+/*
 function updateGlyph(aLoc) {
     if (PHYS_MAP[aLoc].tBody !== false) {
         PHYS_MAP[aLoc].tGlyph = PHYS_MAP[aLoc].tBody.gGlyph;
@@ -589,6 +594,7 @@ function d2() {
 function randFromArray(aArr) {
     return aArr[rand(aArr.length)];
 };
+*/
 
 function randomNodeLayout() {
     let layoutStr = '';
@@ -852,7 +858,7 @@ function generateFloorLayout() {
 }
 
 
-
+/*
 function buildAllOfIt() {
     generateLocsAndMaps();
     genSideRefs();
@@ -860,6 +866,7 @@ function buildAllOfIt() {
     generateFloorLayout();
     mapGridToFloor();
 }
+*/
 
 /*
  *

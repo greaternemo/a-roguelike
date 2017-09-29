@@ -6,21 +6,6 @@ ARL.BASE = {
     RefData: {
 
         loopDelay: (1000/30),
-
-        /*
-        mapSize: {
-            xw: 30,
-            yh: 30,
-        },
-        nodeSize: {
-            nWidth: 10,
-            nHeight: 10,
-        },
-        gridSize: {
-            gWidth: 3,
-            gHeight: 3,
-        },
-        */
         
         // Flags
         listenNumpad: true,
@@ -78,27 +63,15 @@ ARL.BASE = {
         // the loc strings that correspond to elems
         viewLocs: [],
         
-        // the loc strings that correspond to grid nodes
-        // REFACTORING THESE INTO INDIVIDUAL LAYOUTS AS NEEDED
-        // gridLocs: [],
-        
-        // the loc strings that correspond to a single grid node's interior
-        // REFACTORING THESE INTO INDIVIDUAL LAYOUTS AS NEEDED
-        // nodeLocs: [],
-
-        // the elements at the ends of lines, so we don't mistake them
-        // for physical locations that the player can visit
-        // **these should never change, these elems should never be updated**
-        lineEnds: [],
-
         // keyed to loc strings
         // values should be objects with loc strings for each adjacent loc
         sideRefs: {},
         
-        //asdf
+        // keyed to strings representing grid sizes
+        // keyed within each table by loc string
         gridSideRefs: {},
         
-        // asdf
+        // base data for our PHYS_MAP
         physBase: {
             mapSize: {
                 mWidth: 30,
@@ -114,7 +87,7 @@ ARL.BASE = {
             },
         },
         
-        // asdf
+        // base data for our VIEW_MAP
         viewBase: {
             mapSize: {
                 mWidth: 30,
@@ -129,7 +102,6 @@ ARL.BASE = {
             },
         },
         
-        // not implemented, a list of all the keys in terrainBase
         terrainList: [
             'floor',
             'wall',
@@ -148,7 +120,6 @@ ARL.BASE = {
             },
         },
         
-        // not implemented, a list of all the keys in mobBase
         mobList: [
             'player',
             'gobbo',
@@ -215,13 +186,13 @@ ARL.BASE = {
                 "....",
                 "#..#",
             ],
-            emptyRoom: [
+            emptyLayout: [
                 "....",
                 "....",
                 "....",
                 "....",
             ],
-            allWalls: [
+            fullLayout: [
                 "####",
                 "####",
                 "####",
@@ -331,7 +302,7 @@ ARL.BASE = {
                     "####",
                 ],
             },
-            layoutNames: [
+            layoutTypes: [
                 'corridors',
                 'ends',
                 'corners',
@@ -426,6 +397,20 @@ ARL.BASE = {
         ],
         Mapgen: [
                 // filler line
+                'getNodeSides',
+                'compareNodeSides',
+                'isNodeLayoutSideOpen',
+                'getOpenEndSide',
+                'getValidNodeSides',
+                'getValidNodeLayouts',
+                'getMapgenLayout',
+                'generateRandomNodeLayout',
+                'convertNodeLayoutToSingleArray',
+                'remapNodeLayoutToNodeMap',
+                'expandLayoutMapNodes',
+                'mapLayoutMapToFinishedLayout',
+                'mapFinishedLayoutToFloor',
+                'generateFloorLayout',
         ],
         Narrator: [
                 'narrate',
@@ -452,6 +437,7 @@ ARL.BASE = {
         Util: [
                 'rand',
                 'aDie',
+                'aCoin',
                 'd2',
                 'd4',
                 'd6',
@@ -534,9 +520,6 @@ ARL.BASE = {
     Constants: [
                 // filler line
                 'LOOP_DELAY',       // ro, float, standard loop delay in ms
-                //'MAP_SIZE',         // ro, table, height and width of the map in tiles
-                //'NODE_SIZE',        // ro, height and width of a node in tiles
-                //'GRID_SIZE',        // ro, height and width of a floor grid in nodes
                 'ALL_DIRS',         // ro, array, all dirs as single character strings
                 'OPPOSING_DIRS',    // ro, table, opposing cardinal dirs, keyed by dir
                 'SIDE_DELTAS',      // ro, table, deltas for each dir
@@ -550,10 +533,6 @@ ARL.BASE = {
                 'VIEW_BASE',        // ro, table, tables of view map base data
                 'VIEW_LOCS',        // ro, array, all renderable map locs
                 'VIEW_MAP',         // rw, table, view elements, keyed by view loc
-                //'GRID_LOCS',        // ro, array, locs for grid nodes for map generation
-                //'NODE_LOCS',        // ro, array, relative locs within each grid node
-                'LINE_ENDS',        // ro, array, all view locs that are not phys locs
-                //'GRID_MAP',         // ro, table, tables of node locs to target phys locs, keyed by grid loc
                 'DIRTY_LOCS',       // rw, array, view locs that need to be redrawn
                 'DIRTY_LOAD',       // rw, array, view locs that need to be redrawn
                 'READY_TO_DRAW',    // rw, bool, is the map ready to attempt a redraw
@@ -565,6 +544,7 @@ ARL.BASE = {
 
                 'LAYOUT_LIST',      // ro, array, map layout names as strings
                 'LAYOUT_BASE',      // ro, table, tables of map layout data, keyed by floor name
+                'LAYOUT_MAP',       // rw, table, contains floor layout data as it's being built
 
                 'TERRAIN_LIST',     // ro, array, terrain types as strings
                 'TERRAIN_BASE',     // ro, table, tables of terrain data, keyed by terrain name
@@ -587,7 +567,7 @@ ARL.BASE = {
     /*
     Additional details for Constants
     
-    GRID_MAP is a table with values keyed to grid locs.
+    GRID_MAP was a table with values keyed to grid locs.
     The values in GRID_MAP are also tables.
     Each of those tables have node locs as the keys and the related phys locs as the values.
     GRID_MAP: {
@@ -610,9 +590,6 @@ ARL.BASE = {
     Schema: {
         // filler line
         LOOP_DELAY:     'loopDelay',
-        //MAP_SIZE:       'mapSize',
-        //NODE_SIZE:      'nodeSize',
-        //GRID_SIZE:      'gridSize',
         ALL_DIRS:       'allDirs',
         OPPOSING_DIRS:  'opposingDirs',
         SIDE_DELTAS:    'dirDeltas',
@@ -624,8 +601,6 @@ ARL.BASE = {
 
         VIEW_BASE:      'viewBase',
         VIEW_LOCS:      'viewLocs',
-        //GRID_LOCS:      'gridLocs',
-        //NODE_LOCS:      'nodeLocs',
         LINE_ENDS:      'lineEnds',
 
         FLOOR_LIST:     'floorList',
@@ -680,7 +655,6 @@ function genSidesFromDeltas(rxyp, aWidth, aHeight) {
     let sideObj = {};
     let sideDirs = ['N', 'E', 'S', 'W'];
     let dDeltas = ARL.BASE.RefData.dirDeltas;
-    //let mSize = ARL.BASE.RefData.viewBase.mapSize;
     for (aIdx = 0; aIdx < sideDirs.length; aIdx += 1) {
         aDir = sideDirs[aIdx];
         adp = {
@@ -750,16 +724,6 @@ for (dy = 0; dy < rData.viewBase.mapSize.mHeight; dy += 1) {
         // push to viewLocs, check
         rData.viewLocs.push(xyp);
     }
-    /*
-    xyp = '' + rData.viewBase.mapSize.mWidth.toString() + ',' + dy.toString();
-    // push to allLocs, check
-    rData.allLocs.push(xyp);
-    // do NOT push to physLocs
-    // push to viewLocs, check
-    rData.viewLocs.push(xyp);
-    // push to lineEnds, check
-    rData.lineEnds.push(xyp);
-    */
 }
 
 // build the siderefs for those locs

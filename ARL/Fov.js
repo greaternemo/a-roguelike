@@ -231,7 +231,7 @@ ARL.Fov.prototype.addArcToRange = function(params) {
     }
     // if all else fails, for the love of god just return aRange
     return aRange;
-}
+};
 
 ARL.Fov.prototype.checkRangeForArc = function(params) {
     let anArc = params.anArc;
@@ -391,20 +391,8 @@ ARL.Fov.prototype.updateVisibility = function() {
             // if it's visible, you know it now if you didn't already
             if (curFloor[aLoc].aVisible === true) {
                 newView.push(aLoc);
-                //VIEW_MAP[aLoc].vElem.className = '';
-                //VIEW_MAP[aLoc].vElem.classList.add('known_visible');
                 if (GCON('PLAYER_MOB').mVision.vKnownLocs.indexOf(aLoc) === -1) {
                     GCON('PLAYER_MOB').mVision.vKnownLocs.push(aLoc);
-                }
-            }
-            // if it's not visible and you don't know it, you still don't
-            else if (curFloor[aLoc].aVisible === false) {
-                if (GCON('PLAYER_MOB').mVision.vKnownLocs.indexOf(aLoc) === -1) {
-                    //VIEW_MAP[aLoc].vElem.className = '';
-                    //VIEW_MAP[aLoc].vElem.classList.add('unknown_hidden');
-                } else {
-                    //VIEW_MAP[aLoc].vElem.className = '';
-                    //VIEW_MAP[aLoc].vElem.classList.add('known_hidden');
                 }
             }
             // regardless, we splice it out of oldView if it's there
@@ -421,8 +409,6 @@ ARL.Fov.prototype.updateVisibility = function() {
         if (touchedLocs.indexOf(aLoc) === -1) {
             touchedLocs.push(aLoc);
         }
-        //VIEW_MAP[aLoc].vElem.className = '';
-        //VIEW_MAP[aLoc].vElem.classList.add('known_hidden');
     }
     
     // last thing we do here is handle all those updates.

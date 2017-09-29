@@ -1,11 +1,7 @@
 // ARL.World
 // Namespace for the game world
 
-ARL.World = function () {
-
-    // this.wFloorList = [];
-    // this.wFloorMap = {};
-    
+ARL.World = function () {    
     this.init();
 };
 
@@ -50,7 +46,7 @@ ARL.World.prototype.generateBasicTile = function () {
         // calculated on the fly
         // false is the default, enabled true for testing
         aKnown: false,
-        //aKnown: true,
+        // aKnown: true,
         // calculated on the fly
         aVisible: false,
     };
@@ -407,7 +403,6 @@ ARL.World.prototype.updateCurrentGlyph = function (aLoc) {
         physTile.aGlyph = GCON('TERRAIN_BASE')[physTile.aTerrain].tGlyph;
     }
     // mark the tile dirty
-    //GCON('DIRTY_LOCS').push(aLoc);
     SIG('addToDirtyLoad', [aLoc]);
 };
 

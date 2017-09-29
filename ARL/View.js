@@ -11,24 +11,11 @@ ARL.View = function () {
 ARL.View.prototype.
 */
 
-// Consider maybe using a table instead of just loose code elems? just sayin
-
-/*
-ARL.View.prototype.swapPanes = function () {
-    this.preopt.classList.add('hidden');
-    this.opt.className = '';
-    return this.startGame();
-};
-*/
-
 ARL.View.prototype.init = function () {
     let viewLocs = GCON('VIEW_LOCS').slice();
-    let physLocs = GCON('PHYS_LOCS').slice();
-    //let lineEnds = GCON('LINE_ENDS').slice();
     let viewMap = {};
     let curLoc = null;
     let curLocXY = null;
-    //let mapPanel = SIG('byId', 'map_panel');
     let mapCanvas = SIG('byId', 'map_canvas');
     mapCanvas.getContext('2d').fillStyle = 'lightgreen';
     mapCanvas.getContext('2d').fillRect(0, 0, mapCanvas.width, mapCanvas.height);
@@ -39,51 +26,24 @@ ARL.View.prototype.init = function () {
         // order is irrelevant, but I like to do it all by index ascending
         curLoc = viewLocs.shift();
         curLocXY = curLoc.split(',');
-        /*
-        if (physLocs.indexOf(curLoc) !== -1) {
-            viewMap[curLoc] = {
-                vElem: document.createElement('code'),
-                vText: document.createTextNode('?'),
-            };
-            // don't forget to attach the content node to the visible node
-            viewMap[curLoc].vElem.appendChild(viewMap[curLoc].vText);
-        }
-        else if (lineEnds.indexOf(curLoc) !== -1) {
-            viewMap[curLoc] = {
-                vElem: document.createElement('br'),
-                vText: false,
-            };
-        }
-        */
         viewMap[curLoc] = {
             vElem: {
                 eOriginX: parseInt(curLocXY[0]),
                 eOriginY: parseInt(curLocXY[1]),
             },
             vGlyph: '#',
-            vKnown: false,
             // false should be default, enabled true for testing
             // vKnown: true,
-            //vVisible: false,
+            vKnown: false,
+            // vVisible: false,
             vColorFG: 'lightgray',
-            //vColorBG: '#384148',
+            // vColorBG: '#384148',
             vColorBG: 'black',
         };
     }
     SCON('VIEW_MAP', viewMap);
     curLoc = null;
-    
-    /*
-    // then we draw the VIEW_MAP to the map panel
-    // slice off another copy of VIEW_LOCS
-    viewLocs = GCON('VIEW_LOCS').slice();
-    while (viewLocs.length > 0) {
-        // order is ABSOLUTELY IMPORTANT here.
-        curLoc = viewLocs.shift();
-        mapPanel.appendChild(GCON('VIEW_MAP')[curLoc].vElem);
-    }
-    */
-    
+        
     // then we create our DIRTY_LOCS array
     SCON('DIRTY_LOCS', ['all']);
     SCON('DIRTY_LOAD', []);
@@ -93,9 +53,6 @@ ARL.View.prototype.init = function () {
     this.viewLoop = new ARL.Loop(function () {
         return SIG('drawPhysMap');
     }, GCON('LOOP_DELAY'));
-    
-    // then we do our first map draw so we're not just looking at nothing!
-    //SIG('updateVisibility')
 };
 
 ARL.View.prototype.drawPhysMap = function () {
@@ -121,7 +78,6 @@ ARL.View.prototype.drawPhysMap = function () {
                     dirtyLocs = GCON('DIRTY_LOCS');
                 }
                 else {
-                    //GCON('VIEW_MAP')[curLoc].vElem.textContent = physCurFloor[curLoc].aGlyph;
                     SIG('handleCellUpdates', {
                         targetTile: physCurFloor[curLoc],
                         targetLoc: curLoc,

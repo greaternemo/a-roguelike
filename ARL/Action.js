@@ -8,8 +8,6 @@ ARL.Action.prototype
 */
 
 ARL.Action.prototype.handleCurrentTurn = function () {
-    // asdf
-    // let theMob = GET(aMob);
     SIG('compelMob', GCON('FLOOR_MAP')[GCON('CURRENT_FLOOR')].fCurMob);
 };
 
@@ -102,7 +100,6 @@ ARL.Action.prototype.moveMobToLoc = function (mData) {
     GET(aMob).mPosition.pLocXY = locTo;
     physLocFrom.aBody = false;
     physLocTo.aBody = aMob;
-    //SIG('updateVisibility');
     SIG('handleTileUpdates', [locFrom, locTo]);
 };
 
