@@ -12,6 +12,7 @@ var ARL = {
     aFov: null,
     aGame: null,
     aInput: null,
+    aMapgen: null,
     aNarr: null,
     aTurner: null,
     aUtil: null,
@@ -20,40 +21,59 @@ var ARL = {
 };
 
 ARL.init = function () {
+    // Import order is VERY IMPORTANT here.
     ARL.aRouter = new ARL.Router(ARL.BASE);
 
     ARL.aRegistry = new ARL.Registry(ARL.BASE);
     ARL.aRouter.import('Registry', ARL.aRegistry);
+    //console.log('Imported Registry');
 
     ARL.aUtil = new ARL.Util();
     ARL.aRouter.import('Util', ARL.aUtil);
+    //console.log('Imported Util');
 
     ARL.aView = new ARL.View();
     ARL.aRouter.import('View', ARL.aView);
+    //console.log('Imported View');
 
     ARL.aNarr = new ARL.Narrator();
     ARL.aRouter.import('Narrator', ARL.aNarr);
+    //console.log('Imported Narrator');
+    
+    ARL.aMapgen = new ARL.Mapgen();
+    ARL.aRouter.import('Mapgen', ARL.aMapgen);
+    //console.log('Imported Mapgen');
 
     ARL.aWorld = new ARL.World();
     ARL.aRouter.import('World', ARL.aWorld);
+    //console.log('Imported World');
+    // I don't know why I didn't think of this sooner
+    ARL.aWorld.init();
+    //console.log('Initialized World');
     
     ARL.aFov = new ARL.Fov();
     ARL.aRouter.import('Fov', ARL.aFov);
+    //console.log('Imported Fov');
 
     ARL.aAction = new ARL.Action();
     ARL.aRouter.import('Action', ARL.aAction);
+    //console.log('Imported Action');
 
     ARL.aAgent = new ARL.Agent();
     ARL.aRouter.import('Agent', ARL.aAgent);
+    //console.log('Imported Agent');
 
     ARL.aTurner = new ARL.Turner();
     ARL.aRouter.import('Turner', ARL.aTurner);
+    //console.log('Imported Turner');
     
     ARL.aInput = new ARL.Input();
     ARL.aRouter.import('Input', ARL.aInput);
+    //console.log('Imported Input');
 
     ARL.aGame = new ARL.Game();
     ARL.aRouter.import('Game', ARL.aGame);
+    //console.log('Imported Game');
     
     // We have some init bits that need to be done out of import order
     SIG('updateVisibility');

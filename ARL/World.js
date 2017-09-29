@@ -2,7 +2,6 @@
 // Namespace for the game world
 
 ARL.World = function () {    
-    this.init();
 };
 
 /*
@@ -21,14 +20,16 @@ ARL.World.prototype.init = function () {
         fThis = fList.shift();
         // GCON('PHYS_MAP')[fThis] = this.buildBasicFloorMap();
         // GCON('PHYS_MAP')[fThis] = this.buildGreatHallFloorMap();
-        GCON('PHYS_MAP')[fThis] = this.buildGobboctagonFloorMap();
-        GCON('FLOOR_MAP')[fThis] = this.buildFloorData(fThis);
+        // GCON('PHYS_MAP')[fThis] = this.buildGobboctagonFloorMap();
+        SIG('generateFloor', fThis);
+        //console.log('Generated Floor');
+        GCON('FLOOR_MAP')[fThis] = SIG('buildFloorData', fThis);
         // now with infinity percent more mobs!!!
         if (fThis === GCON('FLOOR_LIST')[0]) {
-            this.populateFirstFloor(fThis);
+            SIG('populateFirstFloor', fThis);
         }
         else {
-            this.populateFloor(fThis);
+            SIG('populateFloor', fThis);
         }
     }
 };
@@ -53,67 +54,6 @@ ARL.World.prototype.generateBasicTile = function () {
     return aTile;
 };
 
-ARL.World.prototype.generateGridAndNodeLocs = function () {
-    // generate the node locs and grid locs and the conversion table for them
-    let gridSize = GCON('GRID_SIZE');
-    SCON('GRID_LOCS', SIG('generateLocs', {
-        xMin: 0,
-        xMax: gridSize.gWidth,
-        yMin: 0,
-        yMax: gridSize.gHeight,
-    }));
-
-    let nodeSize = GCON('NODE_SIZE');
-    // an array of locs between '0,0' and '10,10', inclusive
-    // later we'll need to translate these based on the gridLoc
-    // e.g., '0,0' in node '1,1' will become '10,10'
-    // this will be something like
-    // NW corner is (nodeLoc * gridLoc),(nodeLoc * gridLoc)
-    // NE corner is ((nodeLoc * (gridLoc + 1)) - 1),(nodeLoc * gridLoc)
-    // SE corner is ((nodeLoc * (gridLoc + 1)) - 1),((nodeLoc * (gridLoc + 1)) - 1)
-    // SW corner is (nodeLoc * gridLoc),((nodeLoc * (gridLoc + 1)) - 1)
-    SCON('NODE_LOCS', SIG('generateLocs', {
-        xMin: 0,
-        xMax: nodeSize.nWidth,
-        yMin: 0,
-        yMax: nodeSize.nHeight,
-    }));
-    
-    let gridLocs = GCON('GRID_LOCS').slice();
-    let nodeLocs = GCON('NODE_LOCS').slice();
-    
-    // then we assemble and assign the grid map
-    let gridMap = {};
-    let aGridLoc = null;
-    let aNodeLoc = null;
-    let aPhysLoc = null;
-    let gIdx = null;
-    let gLen = gridLocs.length;
-    let nIdx = null;
-    let nLen = nodeLocs.length;
-    let gdx = null;
-    let gdy = null;
-    let ndx = null;
-    let ndy = null;
-    let pdx = null;
-    let pdy = null;
-    
-    for (gIdx = 0; gIdx < gLen; gIdx += 1) {
-        aGridLoc = gridLocs[gIdx];
-        gridMap[aGridLoc] = {};
-        for (nIdx = 0; nIdx < nLen; nIdx += 1) {
-            aNodeLoc = nodeLocs[nIdx];
-            [gdx, gdy] = aGridLoc.split(',');
-            [ndx, ndy] = aNodeLoc.split(',');
-            pdx = (parseInt(gdx) * parseInt(ndx)) + parseInt(ndx);
-            pdy = (parseInt(gdy) * parseInt(ndy)) + parseInt(ndy);
-            aPhysLoc = pdx.toString() + ',' + pdy.toString();
-            gridMap[aGridLoc][aNodeLoc] = aPhysLoc;
-        }
-    }
-    SCON('GRID_MAP', gridMap);
-};
-
 ARL.World.prototype.buildFloorData = function (aFloor) {
     // blerg
     let fData = {
@@ -133,7 +73,7 @@ ARL.World.prototype.buildBasicFloorMap = function () {
     let physLocs = GCON('PHYS_LOCS').slice();
     while (physLocs.length) {
         newLoc = physLocs.shift();
-        newTile = this.generateBasicTile();
+        newTile = SIG('generateBasicTile');
         newTile.locXY = newLoc;
         newFloorMap[newLoc] = newTile;
     }
@@ -149,7 +89,7 @@ ARL.World.prototype.buildGreatHallFloorMap = function () {
     let physLocs = GCON('PHYS_LOCS').slice();
     while (physLocs.length) {
         newLoc = physLocs.shift();
-        newTile = this.generateBasicTile();
+        newTile = SIG('generateBasicTile');
         newTile.locXY = newLoc;
         nX = newLoc.split(',')[0];
         nY = newLoc.split(',')[1];
@@ -194,7 +134,7 @@ ARL.World.prototype.buildGobboctagonFloorMap = function () {
     }
     while (physLocs.length) {
         newLoc = physLocs.shift();
-        newTile = this.generateBasicTile();
+        newTile = SIG('generateBasicTile');
         newTile.locXY = newLoc;
         // this needs to be refactored so that your values aren't hard-coded
         if(octagon.indexOf(newLoc) === -1) {
@@ -209,29 +149,28 @@ ARL.World.prototype.buildGobboctagonFloorMap = function () {
     return newFloorMap;
 };
 
-ARL.World.prototype.generateFloorLayout = function (aFloor) {
-    // TODO, moving a lot of the loc generation to ARL.BASE
+ARL.World.prototype.generateFloor = function (aFloor) {
+    // we're gonna hardcode this for now
+    let layoutType = 'standard';
     
-    // Now we start this, the most grave of tasks
-    aFloor = null; // fix this ok
-    
-    // Ok, what in heck do we care about?
-    let floorOuterWall = [];
-    let roomInnerTiles = [];
-    let roomOuterTiles = [];
+    GCON('PHYS_MAP')[aFloor] = SIG('buildBasicFloorMap');
+    //console.log('Built basic floor map for ' + aFloor);
+    SIG('generateFloorLayout', layoutType);
+    //console.log('Generated ' + layoutType + ' floor layout for ' + aFloor);
+    SIG('mapFinishedLayoutToFloor', [layoutType, aFloor]);
 };
 
 ARL.World.prototype.populateFirstFloor = function (aFloor) {
     // create the player mob
-    let newMobId = this.generatePlayer(aFloor);
+    let newMobId = SIG('generatePlayer', aFloor);
     // assign the mob to a location on the floor
-    GCON('PLAYER_MOB').mPosition.pLocXY = this.findAWalkableTile(aFloor);
+    GCON('PLAYER_MOB').mPosition.pLocXY = SIG('findAWalkableTile', aFloor);
     // note the phys loc as occupied
     GCON('PHYS_MAP')[aFloor][GCON('PLAYER_MOB').mPosition.pLocXY].aBody = newMobId;
     // add the mob to the floor's mob array
     GCON('FLOOR_MAP')[aFloor].fMobs.push(newMobId);
     // now do the nonplayer mobs
-    this.populateFloor(aFloor);
+    SIG('populateFloor', aFloor);
 };
 
 ARL.World.prototype.populateFloor = function (aFloor) {
@@ -239,8 +178,8 @@ ARL.World.prototype.populateFloor = function (aFloor) {
     let mCnt = 3;
     let newMobId = null;
     for (mCnt; mCnt > 0; mCnt -= 1) {
-        newMobId = this.generateMob(aFloor);
-        GET(newMobId).mPosition.pLocXY = this.findAWalkableTile(aFloor);
+        newMobId = SIG('generateMob', aFloor);
+        GET(newMobId).mPosition.pLocXY = SIG('findAWalkableTile', aFloor);
         GCON('PHYS_MAP')[aFloor][GET(newMobId).mPosition.pLocXY].aBody = newMobId;
         GCON('FLOOR_MAP')[aFloor].fMobs.push(newMobId);
     }

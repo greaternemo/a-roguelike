@@ -104,7 +104,8 @@ ARL.Mapgen.prototype.getValidNodeSides = function (params) {
 
 // updated, should be good
 ARL.Mapgen.prototype.getValidNodeLayouts = function (params) {
-    let [aLoc, lastLayout] = params;
+    //console.log('Called getValidNodeLayouts');
+    let [aLoc, lastLayout, gridSideRefs] = params;
     //console.log("getValidNodeLayouts: " + aLoc + " & " + lastLayout);
     // for this one, we take a loc with no layout
     // we calculate the possible layouts based on the transition
@@ -114,7 +115,9 @@ ARL.Mapgen.prototype.getValidNodeLayouts = function (params) {
     let aLasts = null;
     let aLayouts = null;
     let layoutMap = GCON('LAYOUT_MAP');
+    //console.log('Gets LAYOUT_MAP');
     let mapgenBase = GCON('MAPGEN_BASE');
+    //console.log('Gets MAPGEN_BASE');
 
     aLasts = mapgenBase.transitions[lastLayout].slice();
     while (aLasts.length) {
@@ -126,7 +129,7 @@ ARL.Mapgen.prototype.getValidNodeLayouts = function (params) {
     }
 
     let allDirs = GCON('ALL_DIRS').slice();
-    let locSides = SIG('getNodeSides', aLoc);
+    let locSides = SIG('getNodeSides', [aLoc, gridSideRefs]);
     let validSides = {};
     let aDir = null;
     while (allDirs.length) {
@@ -221,7 +224,7 @@ ARL.Mapgen.prototype.convertNodeLayoutToSingleArray = function (layoutArr) {
 ARL.Mapgen.prototype.remapNodeLayoutToNodeMap = function (params) {
     let [nodeStr, layoutBase] = params;
     let mapgenBase = GCON('MAPGEN_BASE');
-    let baseLayout = convertNodeLayoutToSingleArray(mapgenBase.nodeLayouts[nodeStr]);
+    let baseLayout = SIG('convertNodeLayoutToSingleArray', mapgenBase.nodeLayouts[nodeStr]);
 
     let nodeLocs = layoutBase.nodeLocs.slice();
     if (baseLayout.length != nodeLocs.length) {
@@ -268,6 +271,8 @@ ARL.Mapgen.prototype.expandLayoutMapNodes = function (params) {
 // updated, should be good
 ARL.Mapgen.prototype.mapLayoutMapToFinishedLayout = function (params) {
     let [floorMap, gridLoc, nodeMap, layoutBase] = params;
+    let wOffset = layoutBase.locOffset.wOffset;
+    let hOffset = layoutBase.locOffset.hOffset;
     let splitGridLoc = gridLoc.split(',');
     let gLocX = parseInt(splitGridLoc[0]);
     let gLocY = parseInt(splitGridLoc[1]);
@@ -282,9 +287,9 @@ ARL.Mapgen.prototype.mapLayoutMapToFinishedLayout = function (params) {
     while (nodeLocs.length) {
         aLoc = nodeLocs.shift();
         bLoc = aLoc.split(',');
-        nX = parseInt(bLoc[0]) + dX;
-        nY = parseInt(bLoc[1]) + dY;
-        nLoc = '' + nX + ',' + nY;
+        nX = parseInt(bLoc[0]) + dX + parseInt(wOffset);
+        nY = parseInt(bLoc[1]) + dY + parseInt(hOffset);
+        nLoc = '' + nX.toString() + ',' + nY.toString();
         floorMap[nLoc] = nodeMap[aLoc];
     }
 };
@@ -313,10 +318,13 @@ ARL.Mapgen.prototype.mapFinishedLayoutToFloor = function (params) {
     while (physLocs.length > 0) {
         aLoc = physLocs.shift();
         terrainList = GCON('TERRAIN_LIST').slice();
-        while (terrainList.length > 0) {
-            tTerrain = terrainList.shift();
-            if (terrainBase[tTerrain].tGlyph === floorMap[aLoc]) {
-                physMap[aLoc].aTerrain = tTerrain;
+        if (floorMap[aLoc]) {
+            while (terrainList.length > 0) {
+                tTerrain = terrainList.shift();
+                if (terrainBase[tTerrain].tGlyph === floorMap[aLoc]) {
+                    physMap[aLoc].aTerrain = tTerrain;
+                    physMap[aLoc].aGlyph = floorMap[aLoc];
+                }
             }
         }
     }
@@ -338,6 +346,7 @@ ARL.Mapgen.prototype.generateFloorLayout = function (layoutType) {
     }
     let gridStr = layoutBase.gridSize.gWidth.toString() + 'x' + layoutBase.gridSize.gHeight.toString();
     let gridSideRefs = GCON('GRID_SIDE_REFS')[gridStr];
+    //console.log('Generated basic dataset for floor layout');
 
     let originLoc = null;
     let randLayout = null;
@@ -356,10 +365,12 @@ ARL.Mapgen.prototype.generateFloorLayout = function (layoutType) {
     // random loc: GRID_LOCS[rand(GRID_LOCS.length)];
     // originLoc = '3,3';
     originLoc = SIG('randFromArray', layoutBase.gridLocs.slice());
+    //console.log('Gets origin loc');
     // pick a valid origin layout
     // randLayout = randFromArray(LAYOUTS.ends);
     // randLayout = '0000';
-    randLayout = SIG('randFromArray', SIG('getValidNodeLayouts', [originLoc, "corridors"]));
+    randLayout = SIG('randFromArray', SIG('getValidNodeLayouts', [originLoc, "corridors", gridSideRefs]));
+    //console.log('Gets first random node layout');
     // save that on our layout map in progress
     layoutMap[originLoc] = randLayout;
     allNodes[originLoc] = {};
@@ -401,7 +412,7 @@ ARL.Mapgen.prototype.generateFloorLayout = function (layoutType) {
         }
         // pick a valid node layout
         randLayout = null;
-        randLayout = SIG('randFromArray', SIG('getValidNodeLayouts', [nextLoc, allNodes[lastLoc].layout]));
+        randLayout = SIG('randFromArray', SIG('getValidNodeLayouts', [nextLoc, allNodes[lastLoc].layout, gridSideRefs]));
         // save that on the layout map in progress
         layoutMap[nextLoc] = randLayout;
         allNodes[nextLoc].layout = SIG('getMapgenLayout', randLayout);

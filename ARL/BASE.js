@@ -166,6 +166,10 @@ ARL.BASE = {
             greatHall: {},
             gobboctagon: {},
             standard: {
+                locOffset: {
+                    wOffset: 1,
+                    hOffset: 1,
+                },
                 gridSize: {
                     gWidth: 7,
                     gHeight: 7,
@@ -485,6 +489,7 @@ ARL.BASE = {
                 'buildBasicFloorMap',
                 'buildGreatHallFloorMap',
                 'buildGobboctagonFloorMap',
+                'generateFloor',
                 'populateFirstFloor',
                 'populateFloor',
                 'findAWalkableTile',
@@ -545,6 +550,8 @@ ARL.BASE = {
                 'LAYOUT_LIST',      // ro, array, map layout names as strings
                 'LAYOUT_BASE',      // ro, table, tables of map layout data, keyed by floor name
                 'LAYOUT_MAP',       // rw, table, contains floor layout data as it's being built
+
+                'MAPGEN_BASE',      // ro, table, tables of map generation data
 
                 'TERRAIN_LIST',     // ro, array, terrain types as strings
                 'TERRAIN_BASE',     // ro, table, tables of terrain data, keyed by terrain name
@@ -608,6 +615,8 @@ ARL.BASE = {
 
         LAYOUT_LIST:    'layoutList',
         LAYOUT_BASE:    'layoutBase',
+
+        MAPGEN_BASE:    'mapgenBase',
 
         TERRAIN_LIST:   'terrainList',
         TERRAIN_BASE:   'terrainBase',
