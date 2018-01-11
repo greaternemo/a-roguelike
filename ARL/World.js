@@ -49,6 +49,7 @@ ARL.World.prototype.generateBasicTile = function () {
         aKnown: false,
         // aKnown: true,
         // calculated on the fly
+        // is the tile visible to the player mob
         aVisible: false,
     };
     return aTile;
@@ -207,7 +208,13 @@ ARL.World.prototype.findAWalkableTile = function (aFloor) {
 
 ARL.World.prototype.findRandomWalkableSide = function (aLoc) {
     let walkableDirs = SIG('findWalkableSides', aLoc);
-    return SIG('randFromArray', walkableDirs);
+    // We need to start validating that there are any walkable dirs at all!
+    if (walkableDirs.length) {
+        return SIG('randFromArray', walkableDirs);
+    }
+    else {
+        return false;
+    }
 };
 
 ARL.World.prototype.findWalkableSides = function (aLoc) {
@@ -221,6 +228,10 @@ ARL.World.prototype.findWalkableSides = function (aLoc) {
             walkableDirs.push(aDir);
         }
     }
+    // RIGHT NOW there is no way in the game for a mob to be standing in a space
+    // that is surrounded by impassible terrain on all sides. The mapgen just won't do it.
+    // BUT IN THEORY, IF THEY COULD, this would return an empty array, so we need to
+    // validate the data that's being returned here.
     return walkableDirs;
 };
 
@@ -365,7 +376,7 @@ ARL.World.prototype.checkTileVisibility = function (aLoc) {
             physTile.aVisible = true;
         }
     }
-}
+};
 
 
 

@@ -12,46 +12,83 @@ ARL.BASE = {
         playerTurn: false,
         readyForTurn: false,
 
+        /* IMPLEMENT THIS:
+        allDirs: {
+            2d: {
+                card: ['N', 'E', 'S', 'W'],
+                diag: ['NE', 'SE', 'SW', 'NW'],
+                main: ['N', 'NE', 'E', 'SE', 'S', 'SW', 'W', 'NW'],
+            },
+            3d: {
+                // YIKES THIS COULD JUST BE A TON, WILL DEAL WITH LATER FOR GROUPINGS
+            },
+        },
+        */
         // allDirs: ['N', 'E', 'S', 'W', 'U', 'D'],
         allDirs: ['N', 'E', 'S', 'W'],
+        diagonalDirs: ['NE', 'SE', 'SW', 'NW'],
+        all8Dirs: ['N', 'NE', 'E', 'SE', 'S', 'SW', 'W', 'NW'],
         opposingDirs: {
-            N: 'S',
-            E: 'W',
-            S: 'N',
-            W: 'E',
+            N:  'S',
+            NE: 'SW',
+            E:  'W',
+            SE: 'NW',
+            S:  'N',
+            SW: 'NE',
+            W:  'E',
+            NW: 'SE',
         },
         dirDeltas: {
             N: {
                 x: 0,
                 y: -1,
-                z: 0,
+                // z: 0,
+            },
+            NE: {
+                x: 1,
+                y: -1,
             },
             E: {
                 x: 1,
                 y: 0,
-                z: 0,
+                // z: 0,
+            },
+            SE: {
+                x: 1,
+                y: 1,
             },
             S: {
                 x: 0,
                 y: 1,
-                z: 0,
+                // z: 0,
+            },
+            SW: {
+                x: -1,
+                y: 1,
             },
             W: {
                 x: -1,
                 y: 0,
-                z: 0,
+                // z: 0,
             },
+            NW: {
+                x: -1,
+                y: -1,
+            },
+            /*
             U: {
                 x: 0,
                 y: 0,
-                z: 1,
+                // z: 1,
             },
             D: {
                 x: 0,
                 Y: 0,
-                z: -1,
+                // z: -1,
             },
+            */
         },
+        
         // gonna populate these
 
         // ALL loc strings
@@ -70,6 +107,25 @@ ARL.BASE = {
         // keyed to strings representing grid sizes
         // keyed within each table by loc string
         gridSideRefs: {},
+        
+        inputBase: {
+            knownKeys: [
+                'numpad1',
+                'numpad2',
+                'numpad3',
+                'numpad4',
+                'numpad5',
+                'numpad6',
+                'numpad7',
+                'numpad8',
+                'numpad9',
+                'keyarrowup',
+                'keyarrowright',
+                'keyarrowdown',
+                'keyarrowleft',
+                'keyspace',
+            ],
+        },
         
         // base data for our PHYS_MAP
         physBase: {
@@ -105,6 +161,8 @@ ARL.BASE = {
         terrainList: [
             'floor',
             'wall',
+            'uStairs',
+            'dStairs',
         ],
 
         terrainBase: {
@@ -118,6 +176,17 @@ ARL.BASE = {
                 tSeeThru: false,
                 tWalkable: false,
             },
+            uStairs: {
+                tGlyph: '<',
+                tSeeThru: true,
+                tWalkable: true,
+            },
+            dStairs: {
+                tGlyph: '>',
+                tSeeThru: true,
+                tWalkable: true,
+            },
+            
         },
         
         mobList: [
@@ -360,6 +429,8 @@ ARL.BASE = {
                 'movePlayerSouth',
                 'movePlayerWest',
                 'useStairs',
+                'pursueThePlayer',
+                'wanderInRandomDir',
                 'tryToMoveMobInDir',
                 'moveMobToLoc',
                 'doAHit',
@@ -372,13 +443,15 @@ ARL.BASE = {
                 'compelMob',
                 'compelPlayer',
                 'compelGobbo',
+                'canSeeThePlayer',
         ],
         Fov: [
                 // filler line
                 'buildRings',
+                'buildDiagonals',
                 'addArcToRange',
                 'checkRangeForArc',
-                'updateVisibility',
+                'updateMobFovOnCurrentFloor',
         ],
         Game: [
                 // filler line
@@ -386,6 +459,10 @@ ARL.BASE = {
                 'doNextTurn',
         ],
         Input: [
+                // filler line
+                'startListeningForInput',
+                'stopListeningForInput',
+                'parseRawKeydown',
                 'queueInput',
                 'handleInput',
                 'pressButton',
@@ -398,6 +475,12 @@ ARL.BASE = {
                 'numpad7',
                 'numpad8',
                 'numpad9',
+                'keyarrowup',
+                'keyarrowright',
+                'keyarrowdown',
+                'keyarrowleft',
+                'keyspace',
+                
         ],
         Mapgen: [
                 // filler line
@@ -525,11 +608,15 @@ ARL.BASE = {
     Constants: [
                 // filler line
                 'LOOP_DELAY',       // ro, float, standard loop delay in ms
-                'ALL_DIRS',         // ro, array, all dirs as single character strings
+                'ALL_DIRS',         // ro, array, all 4 cardinal dirs as single character strings
+                'DIAG_DIRS',        // ro, array, all diagonal dirs as 2-character strings
+                'ALL_8_DIRS',       // ro, array, all 8 cardinal and ordinal dirs as 1-2 character strings
                 'OPPOSING_DIRS',    // ro, table, opposing cardinal dirs, keyed by dir
                 'SIDE_DELTAS',      // ro, table, deltas for each dir
                 'SIDE_REFS',        // ro, table, adjacent locs for each loc
                 'GRID_SIDE_REFS',   // ro, table, tables of adjacent locs for each grid loc, keyed by grid dimensions
+                
+                'INPUT_BASE',       // ro, table, base data for our input system
 
                 'PHYS_BASE',        // ro, table, tables of phys map base data
                 'PHYS_LOCS',        // ro, array, all representable physical locs
@@ -574,6 +661,7 @@ ARL.BASE = {
     /*
     Additional details for Constants
     
+    A)
     GRID_MAP was a table with values keyed to grid locs.
     The values in GRID_MAP are also tables.
     Each of those tables have node locs as the keys and the related phys locs as the values.
@@ -592,16 +680,26 @@ ARL.BASE = {
         ...
     }
     
+    B)
+    GRID_SIDE_REFS is redundant, all of the locs it contains should be in SIDE_REFS, but it's just way,
+    WAY less of a hassle to build a separate table of side refs for a smaller grid size than testing everything
+    against the grid dimensions any time we try to do grid math.
+    It's just cleaner this way.
+    
     */
 
     Schema: {
         // filler line
         LOOP_DELAY:     'loopDelay',
         ALL_DIRS:       'allDirs',
+        DIAG_DIRS:      'diagonalDirs',
+        ALL_8_DIRS:     'all8Dirs',
         OPPOSING_DIRS:  'opposingDirs',
         SIDE_DELTAS:    'dirDeltas',
         SIDE_REFS:      'sideRefs',
         GRID_SIDE_REFS: 'gridSideRefs',
+        
+        INPUT_BASE:     'inputBase',
 
         PHYS_BASE:      'physBase',
         PHYS_LOCS:      'physLocs',
@@ -661,10 +759,16 @@ function genSidesFromDeltas(rxyp, aWidth, aHeight) {
     let adp = null;
     // holds referenced dir from sideDirs[aIdx]
     let aDir = '';
+    // boolean flag to confirm if each direction is valid/on the grid
+    // defaults to true on each iteration of the loop
+    let validDir = true;
+    
     let sideObj = {};
-    let sideDirs = ['N', 'E', 'S', 'W'];
+    // let sideDirs = ['N', 'E', 'S', 'W'];
+    let sideDirs = ['N', 'NE', 'E', 'SE', 'S', 'SW', 'W', 'NW'];
     let dDeltas = ARL.BASE.RefData.dirDeltas;
     for (aIdx = 0; aIdx < sideDirs.length; aIdx += 1) {
+        validDir = true;
         aDir = sideDirs[aIdx];
         adp = {
             x: parseInt(rxyp.split(',')[0]),
@@ -673,40 +777,57 @@ function genSidesFromDeltas(rxyp, aWidth, aHeight) {
         switch (aDir) {
             case 'N':
                 if (adp.y === 0) {
-                    sideObj.N = false;
-                } else {
-                    adp.x += dDeltas[aDir].x;
-                    adp.y += dDeltas[aDir].y;
-                    sideObj.N = '' + adp.x.toString() + ',' + adp.y.toString();
+                    sideObj[aDir] = false;
+                    validDir = false;
+                }
+                break;
+            case 'NE':
+                if (adp.y === 0 && adp.x >= (aWidth - 1)) {
+                    sideObj[aDir] = false;
+                    validDir = false;
                 }
                 break;
             case 'E':
                 if (adp.x >= (aWidth - 1)) {
-                    sideObj.E = false;
-                } else {
-                    adp.x += dDeltas[aDir].x;
-                    adp.y += dDeltas[aDir].y;
-                    sideObj.E = '' + adp.x.toString() + ',' + adp.y.toString();
+                    sideObj[aDir] = false;
+                    validDir = false;
+                }
+                break;
+            case 'SE':
+                if (adp.y >= (aHeight - 1) && adp.x >= (aWidth - 1)) {
+                    sideObj[aDir] = false;
+                    validDir = false;
                 }
                 break;
             case 'S':
                 if (adp.y >= (aHeight - 1)) {
-                    sideObj.S = false;
-                } else {
-                    adp.x += dDeltas[aDir].x;
-                    adp.y += dDeltas[aDir].y;
-                    sideObj.S = '' + adp.x.toString() + ',' + adp.y.toString();
+                    sideObj[aDir] = false;
+                    validDir = false;
+                }
+                break;
+            case 'SW':
+                if (adp.y >= (aHeight - 1) && adp.x === 0) {
+                    sideObj[aDir] = false;
+                    validDir = false;
                 }
                 break;
             case 'W':
                 if (adp.x === 0) {
-                    sideObj.W = false;
-                } else {
-                    adp.x += dDeltas[aDir].x;
-                    adp.y += dDeltas[aDir].y;
-                    sideObj.W = '' + adp.x.toString() + ',' + adp.y.toString();
+                    sideObj[aDir] = false;
+                    validDir = false;
                 }
                 break;
+            case 'NW':
+                if (adp.y === 0 && adp.x === 0) {
+                    sideObj[aDir] = false;
+                    validDir = false;
+                }
+                break;
+        }
+        if (validDir) {
+            adp.x += dDeltas[aDir].x;
+            adp.y += dDeltas[aDir].y;
+            sideObj[aDir] = '' + adp.x.toString() + ',' + adp.y.toString();
         }
     }
     return sideObj;

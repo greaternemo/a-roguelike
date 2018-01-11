@@ -16,10 +16,12 @@ ARL.Util.prototype.aDie = function (sides) {
     return this.rand(sides) + 1;
 };
 
+// Returns a 0 or 1
 ARL.Util.prototype.aCoin = function () {
     return this.aDie(2) - 1;
 };
 
+// Returns a 1 or 2
 ARL.Util.prototype.d2 = function () {
     return this.aDie(2);
 };

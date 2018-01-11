@@ -76,16 +76,22 @@ ARL.init = function () {
     //console.log('Imported Game');
     
     // We have some init bits that need to be done out of import order
-    SIG('updateVisibility');
+    SIG('updateMobFovOnCurrentFloor');
     SIG('drawPhysMap');
 
     // DON'T FORGET TO DO THIS
     ARL.aInput.inputLoop.engage();
     ARL.aView.viewLoop.engage();
     ARL.aGame.gameLoop.engage();
+    
+    // More init bits that need to be done out of order
+    SIG('startListeningForInput');
+    //console.log(ARL);
 };
 
 ARL.restInPeace = function () {
+    // stop handling input
+    SIG('stopListeningForInput');
     // stop the loops
     ARL.aInput.inputLoop.hardReset();
     ARL.aView.viewLoop.hardReset();
@@ -125,6 +131,10 @@ function SET(anEid, aValue) {
 
 function RIP() {
     return ARL.restInPeace();
+}
+
+function KEYIN(aKey) {
+    return SIG('parseRawKeydown', aKey);
 }
 
 // hurk

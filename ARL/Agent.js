@@ -7,6 +7,8 @@ ARL.Agent = function () {};
 ARL.Agent.prototype.
 */
 
+// Compulsion functions
+
 ARL.Agent.prototype.compelMob = function (aMob) {
     // right now we're just going to call different individual AI functions
     // depending on which type of mob we get passed
@@ -29,12 +31,20 @@ ARL.Agent.prototype.compelPlayer = function () {
 };
 
 ARL.Agent.prototype.compelGobbo = function (aMob) {
-    let mLoc = GET(aMob).mPosition.pLocXY;
-    let aDir = SIG('findRandomWalkableSide', mLoc);
-    SIG('tryToMoveMobInDir', [aMob, aDir]);
-    
+    if (SIG('canSeeThePlayer', aMob)) {
+        SIG('pursueThePlayer', aMob);
+    }
+    else {
+        SIG('wanderInRandomDir', aMob);
+    }
 };
 
+// Assessment functions
+
+ARL.Agent.prototype.canSeeThePlayer = function(aMob) {
+    let visibleLocs = new Set(GET(aMob).mVision.vInViewLocs);
+    return visibleLocs.has(GCON('PLAYER_MOB').mPosition.pLocXY);
+};
 
 
 

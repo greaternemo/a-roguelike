@@ -13,13 +13,14 @@ ARL.Action.prototype.handleCurrentTurn = function () {
 
 ARL.Action.prototype.endCurrentTurn = function () {
     if (!GCON('GAME_OVER')) {
-        SIG('updateVisibility');
+        SIG('updateMobFovOnCurrentFloor');
+        // SIG('updateVisibility');
     }
     if (GCON('DIRTY_LOAD').length > 0) {
         SIG('pushDirtyLoad');
     }
     SCON('END_OF_TURN', true);
-}
+};
 
 ARL.Action.prototype.makeMobPassTheTurn = function () {
     SIG('endCurrentTurn');
@@ -59,6 +60,72 @@ ARL.Action.prototype.movePlayerWest = function () {
 };
 
 ARL.Action.prototype.useStairs = function () {};
+
+ARL.Action.prototype.pursueThePlayer = function (aMob) {
+    // We can do this simply because of the way our basic-ass shadowcasting works:
+    // Any mob that can see the player has line of sight and has no obstacles to avoid.
+    
+    let [mX, mY] = GET(aMob).mPosition.pLocXY.split(',');
+    mX = parseInt(mX);
+    mY = parseInt(mY);
+    let [pX, pY] = GCON('PLAYER_MOB').mPosition.pLocXY.split(',');
+    pX = parseInt(pX);
+    pY = parseInt(pY);
+    let walkableDirs = new Set(SIG('findWalkableSides', GET(aMob).mPosition.pLocXY));
+    let validDirs = [];
+    let moveDir = null;
+    
+    // We may need to/may be able to pull this out as a utility function later in some form
+    if (mY > pY) {
+        // north
+        if (walkableDirs.has('N')) {
+            validDirs.push('N');
+        }
+    }
+    else if (mY < pY) {
+        // south
+        if (walkableDirs.has('S')) {
+            validDirs.push('S');
+        }
+    }
+    else {
+        // same y coord, nothing
+    }
+ 
+    if (mX > pX) {
+        // west
+        if (walkableDirs.has('W')) {
+            validDirs.push('W');
+        }
+    }
+    else if (mX < pX) {
+        // east
+        if (walkableDirs.has('E')) {
+            validDirs.push('E');
+        }
+    }
+    else {
+        // same x coord, nothing
+    }
+        
+    if (validDirs.length === 1) {
+        moveDir = validDirs[0];
+        SIG('tryToMoveMobInDir', [aMob, moveDir]);
+    }
+    else if (validDirs.length === 2) {
+        moveDir = validDirs[SIG('aCoin')];
+        SIG('tryToMoveMobInDir', [aMob, moveDir]);
+    }
+    else if (validDirs.length === 0) {
+        SIG('makeMobPassTheTurn');
+    }
+};
+
+ARL.Action.prototype.wanderInRandomDir = function (aMob) {
+    let mLoc = GET(aMob).mPosition.pLocXY;
+    let aDir = SIG('findRandomWalkableSide', mLoc);
+    SIG('tryToMoveMobInDir', [aMob, aDir]);
+};
 
 ARL.Action.prototype.tryToMoveMobInDir = function (mData) {
     // Is there a wall there? If yes, don't move.

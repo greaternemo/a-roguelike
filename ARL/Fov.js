@@ -116,6 +116,94 @@ ARL.Fov.prototype.buildRings = function(params) {
     return fullRange;
 };
 
+ARL.Fov.prototype.buildDiagonals = function(params) {
+    let aLoc = params.aLoc;
+    let aRange = params.aRange;
+    // note: you shouldn't run this with params.aRange <= 0
+        
+    // Currently, you can't see the wall in a corner. This should fix that.
+    // We are going to cast a ray along each diagonal from the current location.
+    // This function will just precompute the values so we can avoid cramming more
+    // code into the big updateVisibility function. (As much as we can, anyway.)
+    
+    // Update: I added diagonals to each loc in SIDE_REFS just to support this.
+    // You're welcome.
+    
+    // We're calculating the diagonal range here because in a 4-way movement system,
+    // each diagonal space is 2 spaces away. Divide by 2, round down.
+    // So for a visual range of 5, we take half (2.5), round down (2).
+    // This lets us populate our locs with locs at range [0, 2] and [2, 4].
+    let diagRange = (aRange / 2) - (aRange % 2);
+    
+    let sideRefs = GCON('SIDE_REFS');
+    let diagLocs = {};
+    let diagDirs = GCON('DIAG_DIRS').slice();
+    let curDir = null;
+    let curLoc = null;
+    let curLocData = null;
+    let dXY = null;
+    
+    while (diagDirs.length) {
+        curDir = diagDirs.shift();
+        diagLocs[curDir] = [];
+        dX = curDir.split('')[1];
+        dY = curDir.split('')[0];
+        dXY = curDir;
+        // remember to reset this on each iteration of the outer loop,
+        // then it will be updated with each iteration of the inner loop
+        curLoc = aLoc;
+        
+        while (diagLocs[curDir].length < diagRange) {
+            curLocData = {
+                loc: null,
+                locXY: null,
+            };
+            if (curLoc) {
+                curLocData.loc = curLoc;
+                curLocData.locXY = sideRefs[curLoc][dXY];
+            } else {
+                curLocData.loc = false;
+                curLocData.locXY = false;
+            }
+            
+            // then update the curLoc for the next loop, then push the curLocData
+            curLoc = curLocData.locXY;
+            diagLocs[curDir].push(curLocData);
+        }
+    }
+    
+    /*
+    note:
+    this is what we have:
+    diagLocs = {
+        'NE': [
+            {
+                loc: '10,10',
+                locX: '11,10',
+                locY: '10,11',
+                locXY: '11,11',
+            },
+            {
+                loc: '11,11',
+                locX: '12,11',
+                locY: '11,12',
+                locXY: '12,12',
+            },
+            (...)
+        ],
+        'SE': [(...)],
+        'SW': [(...)],
+        'NW': [(...)],
+    }
+    
+    for each diagDir, calculate each diagLoc from the curLoc, indexed by distance
+    each diagLoc
+    
+    */
+    
+    return diagLocs;
+};
+
 ARL.Fov.prototype.addArcToRange = function(params) {
     let anArc = params.anArc;
     let aRange = params.aRange;
@@ -268,156 +356,288 @@ ARL.Fov.prototype.checkRangeForArc = function(params) {
     return false;
 };
 
-ARL.Fov.prototype.updateVisibility = function() {
-    let fullRange = SIG('buildRings', {
-        aLoc: GCON('PLAYER_MOB').mPosition.pLocXY,
-        aRange: GCON('PLAYER_MOB').mVision.vFov,
-    });
-    let oldView = GCON('PLAYER_MOB').mVision.vInViewLocs.slice();
-    
-    // we mark ANY loc we touch here as dirty.
-    let touchedLocs = [];
+ARL.Fov.prototype.updateMobFovOnCurrentFloor = function() {
+    // for each mob on the current floor,
+    // build the rings for each mob's field of view
+    // calculate the mob's vInViewLocs
+    // update the mob's known locs
     
     let curFloor = GCON('PHYS_MAP')[GCON('CURRENT_FLOOR')];
-    let newView = [];
-    let shadowRange = [];
-    let arcOverlap = null;
-    let aRing = null;
+    let curFloorMap = GCON('FLOOR_MAP')[GCON('CURRENT_FLOOR')];
+    let curFloorMobs = curFloorMap.fMobs.slice();
+    let curMobIdx = null;
+    let curMob = null;
+    
+    // we mark ANY loc we touch here as dirty.
+    let touchedLocs = new Set();
+    
+    let fullRange = null;
+    let diagLocs = null;
+    
+    let oldView = null;
+    let newView = null;
+    let newKnown = null;
+    
     let ringIdx = null;
-    let aLoc = null;
+    let aRing = null;
     let locIdx = null;
-    let curAngle = null;
-    let curArc = null;
+    let aLoc = null;
+    
     let curArcSize = null;
     let halfCurArcSize = null;
+    let curAngle = null;
+    let curArc = null;
+    
     let isArcSplit = null;
-    for (ringIdx in fullRange) {
-        if (fullRange[ringIdx].length) {
-            aRing = fullRange[ringIdx];
-            for (locIdx in aRing) {
-                if (aRing[locIdx] === false || aRing[locIdx].split(',').length === 2) {
-                    aLoc = aRing[locIdx];
-                    // we need this now since our rings are generated to include
-                    // false values in the place of any loc that's off the grid
-                    if (aLoc === false) {
-                        continue;
-                    }
-                    
-                    if (touchedLocs.indexOf(aLoc) === -1) {
-                        touchedLocs.push(aLoc);
-                    }
-        
-                    // first we derive our arc size, which is the number of arcs
-                    // the current ring is divided into.
-                    isArcSplit = false;
-                    curArcSize = [1, aRing.length];
-                    halfCurArcSize = [1, curArcSize[1] * 2];
-                    curAngle = [locIdx, curArcSize[1]];
-                    curArc = [
-                        [null, null],
-                        [null, null]
-                    ];
-                    // to derive the current arc, we take the curArcSize and
-                    // multiply it by 2, then we subtract that from the curAngle
-                    // to get our min and add it to the curAngle for the max.
-                    curArc[0] = SIG('fracDiff', [curAngle, halfCurArcSize]);
-                    // since we always start at the top, at 0 degrees, we never
-                    // have to worry about going over 1, only under 0, so we can
-                    // do this validation here and then check if our min is >
-                    // our max later safely.
-                    if (curArc[0][0] < 0) {
-                        // if it's negative, adding 1 will just loop us around
-                        curArc[0][0] += curArc[0][1];
-                    }
-                    curArc[1] = SIG('fracSum', [curAngle, halfCurArcSize]);
-        
-                    // does this arc overlap 0, if yes, split it
-                    if (SIG('fracGreaterOf', [curArc[0], curArc[1]]) === curArc[0]) {
-                        isArcSplit = true;
-                        arcOverlap = [
-                            [null, null],
-                            [curArc[1][1], curArc[1][1]]
-                        ];
-                        arcOverlap[0] = curArc.shift();
-                        curArc.unshift([0, arcOverlap[1][1]]);
-                    }
-        
-                    if (isArcSplit === true) {
-                        // then we check to see if we can see the block
-                        if (SIG('checkRangeForArc', {
-                                   anArc: curArc, 
-                                   aRange: shadowRange
-                                }) && 
-                            SIG('checkRangeForArc', {
-                                    anArc: arcOverlap, 
-                                    aRange: shadowRange
-                                })
-                           ) {
-                            // if both return true, it is fully in shadow and we can move on
-                            curFloor[aLoc].aVisible = false;
-                        } else {
-                            curFloor[aLoc].aVisible = true;
-                            // then we check to see if the tile blocks LOS
-                            if (GCON('TERRAIN_BASE')[curFloor[aLoc].aTerrain].tSeeThru === false) {
-                                // add it to the shadow range if it's not already there
-                                shadowRange = SIG('addArcToRange', {
-                                    anArc: curArc, 
-                                    aRange: shadowRange
-                                });
-                                shadowRange = SIG('addArcToRange', {
-                                    anArc: arcOverlap, 
-                                    aRange: shadowRange
-                                });
+    let arcOverlap = null;
+    
+    let shadowRange = null;
+    
+    let diagDirs = null;
+    let curDir = null;
+    let curDiagLoc = null;
+    let thisLoc = null;
+    let nextLoc = null;
+    
+    // LET'S DO THIS
+    for (curMobIdx in curFloorMobs) {
+        if (GET(curFloorMobs[curMobIdx])) {
+            curMob = GET(curFloorMobs[curMobIdx]);
+            
+            // These need to be reassigned values for each mob
+            fullRange = SIG('buildRings', {
+                aLoc: curMob.mPosition.pLocXY,
+                aRange: curMob.mVision.vFov,
+            });
+            diagLocs = SIG('buildDiagonals', {
+                aLoc: curMob.mPosition.pLocXY,
+                aRange: curMob.mVision.vFov,
+            });
+            
+            oldView = new Set(curMob.mVision.vInViewLocs.slice());
+            newView = new Set();
+            newKnown = new Set(curMob.mVision.vKnownLocs.slice());
+            
+            ringIdx = null;
+            aRing = null;
+            locIdx = null;
+            aLoc = null;
+            
+            curArcSize = null;
+            halfCurArcSize = null;
+            curAngle = null;
+            curArc = null;
+            
+            isArcSplit = null;
+            arcOverlap = null;
+            
+            shadowRange = [];
+                        
+            // This is a clusterfuck, so let me break it down, yikes
+            // We iterate over each ring
+            for (ringIdx in fullRange) {
+                // This breaks if there are no locs in the ring, which SHOULD NOT HAPPEN
+                if (fullRange[ringIdx].length) {
+                    aRing = fullRange[ringIdx];
+                    // We iterate over each loc in each ring
+                    for (locIdx in aRing) {
+                        // There are only two possible types of values for aRing[locIdx]:
+                        // false OR any loc in the form 'x,y'
+                        if (aRing[locIdx] === false || aRing[locIdx].split(',').length === 2) {
+                            aLoc = aRing[locIdx];
+                            // we need this now since our rings are generated to include
+                            // false values in the place of any loc that's off the grid
+                            if (aLoc === false) {
+                                continue;
                             }
-                        }
-                    } else {
-                        // then we check to see if we can see the block
-                        if (SIG('checkRangeForArc', {
-                            anArc: curArc, 
-                            aRange: shadowRange})
-                           ) {
-                            // if it returns true, it is fully in shadow and we can move on
-                            curFloor[aLoc].aVisible = false;
-                        } else {
-                            curFloor[aLoc].aVisible = true;
-                            // then we check to see if the tile blocks LOS
-                            if (GCON('TERRAIN_BASE')[curFloor[aLoc].aTerrain].tSeeThru === false) {
-                                // add it to the shadow range if it's not already there
-                                shadowRange = SIG('addArcToRange', {
-                                    anArc: curArc, 
-                                    aRange: shadowRange
-                                });
+                            
+                            // if we haven't touched it yet, we are now touching it
+                            // using a Set for this instead of an array builds in some validation
+                            touchedLocs.add(aLoc);
+                            
+                            // Now comes the shadowcasting.
+                
+                            // first we derive our arc size, which is the number of arcs
+                            // the current ring is divided into.
+                            isArcSplit = false;
+                            curArcSize = [1, aRing.length];
+                            halfCurArcSize = [1, curArcSize[1] * 2];
+                            curAngle = [locIdx, curArcSize[1]];
+                            curArc = [
+                                [null, null],
+                                [null, null]
+                            ];
+                            // to derive the current arc, we take the curArcSize and
+                            // multiply it by 2, then we subtract that from the curAngle
+                            // to get our min and add it to the curAngle for the max.
+                            curArc[0] = SIG('fracDiff', [curAngle, halfCurArcSize]);
+                            // since we always start at the top, at 0 degrees, we never
+                            // have to worry about going over 1, only under 0, so we can
+                            // do this validation here and then check if our min is >
+                            // our max later safely.
+                            if (curArc[0][0] < 0) {
+                                // if it's negative, adding 1 will just loop us around
+                                curArc[0][0] += curArc[0][1];
                             }
+                            curArc[1] = SIG('fracSum', [curAngle, halfCurArcSize]);
+                
+                            // does this arc overlap 0, if yes, split it
+                            if (SIG('fracGreaterOf', [curArc[0], curArc[1]]) === curArc[0]) {
+                                isArcSplit = true;
+                                arcOverlap = [
+                                    [null, null],
+                                    [curArc[1][1], curArc[1][1]]
+                                ];
+                                arcOverlap[0] = curArc.shift();
+                                curArc.unshift([0, arcOverlap[1][1]]);
+                            }
+                
+                            if (isArcSplit === true) {
+                                // then we check to see if we can see the block
+                                if (SIG('checkRangeForArc', {
+                                           anArc: curArc, 
+                                           aRange: shadowRange
+                                        }) && 
+                                    SIG('checkRangeForArc', {
+                                            anArc: arcOverlap, 
+                                            aRange: shadowRange
+                                        })
+                                   ) {
+                                    // if both return true, it is fully in shadow and we can move on
+                                    // curFloor[aLoc].aVisible = false;
+                                } else {
+                                    // curFloor[aLoc].aVisible = true;
+                                    newView.add(aLoc);
+                                    oldView.delete(aLoc);
+                                    newKnown.add(aLoc);
+                                    // then we check to see if the tile blocks LOS
+                                    if (GCON('TERRAIN_BASE')[curFloor[aLoc].aTerrain].tSeeThru === false) {
+                                        // add it to the shadow range if it's not already there
+                                        shadowRange = SIG('addArcToRange', {
+                                            anArc: curArc, 
+                                            aRange: shadowRange
+                                        });
+                                        shadowRange = SIG('addArcToRange', {
+                                            anArc: arcOverlap, 
+                                            aRange: shadowRange
+                                        });
+                                    }
+                                }
+                            } else {
+                                // then we check to see if we can see the block
+                                if (SIG('checkRangeForArc', {
+                                    anArc: curArc, 
+                                    aRange: shadowRange})
+                                   ) {
+                                    // if it returns true, it is fully in shadow and we can move on
+                                    // curFloor[aLoc].aVisible = false;
+                                } else {
+                                    // curFloor[aLoc].aVisible = true;
+                                    newView.add(aLoc);
+                                    oldView.delete(aLoc);
+                                    newKnown.add(aLoc);
+                                    // then we check to see if the tile blocks LOS
+                                    if (GCON('TERRAIN_BASE')[curFloor[aLoc].aTerrain].tSeeThru === false) {
+                                        // add it to the shadow range if it's not already there
+                                        shadowRange = SIG('addArcToRange', {
+                                            anArc: curArc, 
+                                            aRange: shadowRange
+                                        });
+                                    }
+                                }
+                            }
+                            
+                            // THIS IS THE DEAL WITH newView AND oldView
+                            // Originally, we toggled the visibility of tiles when we calculated the shadows
+                            // Then we put them in the newView if they were visible
+                            // So the newView is the list of visible tiles
+                            // After our updates, we're going to compile the entire newView and then update visibility based on that
+                            // We... should be able to calculate which tiles are no longer visible by using all the locs that
+                            // are known but not currently in view.
+                            
+                            // if it's visible, you know it now if you didn't already
+                            /*
+                            if (curFloor[aLoc].aVisible === true) {
+                                newView.push(aLoc);
+                                // update this for all mobs
+                                if (GCON('PLAYER_MOB').mVision.vKnownLocs.indexOf(aLoc) === -1) {
+                                    GCON('PLAYER_MOB').mVision.vKnownLocs.push(aLoc);
+                                }
+                            }
+                            // regardless, we splice it out of oldView if it's there
+                            if (oldView.indexOf(aLoc) !== -1) {
+                                oldView.splice(oldView.indexOf(aLoc), 1);
+                            }
+                            */
                         }
-                    }
-        
-                    // if it's visible, you know it now if you didn't already
-                    if (curFloor[aLoc].aVisible === true) {
-                        newView.push(aLoc);
-                        if (GCON('PLAYER_MOB').mVision.vKnownLocs.indexOf(aLoc) === -1) {
-                            GCON('PLAYER_MOB').mVision.vKnownLocs.push(aLoc);
-                        }
-                    }
-                    // regardless, we splice it out of oldView if it's there
-                    if (oldView.indexOf(aLoc) !== -1) {
-                        oldView.splice(oldView.indexOf(aLoc), 1);
                     }
                 }
             }
-        }
-    }
-    // then we assign the newView as the new gInViewLocs
-    GCON('PLAYER_MOB').mVision.vInViewLocs = newView;
-    // then we clean up all the known cells that are now out of view
-    while (oldView.length > 0) {
-        aLoc = oldView.shift();
-        if (touchedLocs.indexOf(aLoc) === -1) {
-            touchedLocs.push(aLoc);
+            // THEN we check the diagonals to see if any of those tricky inside corner spaces are in view
+            diagDirs = GCON('DIAG_DIRS').slice();
+            curDir = null;
+            curDiagLoc = null;
+            thisLoc = null;
+            nextLoc = null;
+            
+            while (diagDirs.length) {
+                curDir = diagDirs.shift();
+                while (diagLocs[curDir].length) {
+                    curDiagLoc = diagLocs[curDir].shift();
+                    // if anything here is false, we just move on, it will loop itself out
+                    if (curDiagLoc.loc === false || curDiagLoc.locXY === false) {
+                        continue;
+                    }
+                    thisLoc = curDiagLoc.loc;
+                    nextLoc = curDiagLoc.locXY;
+                    // if we can see through the tile, it's visible, and the next tile isn't visible,
+                    // we mark it visible and handle it appropriately.
+                    if (
+                      GCON('TERRAIN_BASE')[curFloor[thisLoc].aTerrain].tSeeThru === true &&
+                      newView.has(thisLoc) === true &&
+                      newView.has(nextLoc) === false) {
+                        //curFloor[nextLoc].aVisible = true;
+                        // I don't think this should ever be in there if it's not visible???
+                        newView.add(nextLoc);
+                        oldView.delete(nextLoc);
+                        newKnown.add(nextLoc);
+                        /*
+                        if (newView.indexOf(nextLoc) === -1) {
+                            newView.push(nextLoc);
+                        }
+                        // replace this with a check that uses the current mob
+                        
+                        if (GCON('PLAYER_MOB').mVision.vKnownLocs.indexOf(nextLoc) === -1) {
+                            GCON('PLAYER_MOB').mVision.vKnownLocs.push(nextLoc);
+                        }
+                        if (oldView.indexOf(nextLoc) !== -1) {
+                            oldView.splice(oldView.indexOf(nextLoc), 1);
+                        }
+                        */
+                    }
+                }
+            }
+            
+            // then we clean up all the known cells that are now out of view
+            oldView = [...oldView];
+            while (oldView.length > 0) {
+                touchedLocs.add(oldView.shift());
+            }
+            // finish this mob up here
+            // then we assign the newView as the new gInViewLocs
+            // replace this with an assignment that uses the current mob
+            curMob.mVision.vInViewLocs = [...newView];
+            curMob.mVision.vKnownLocs = [...newKnown];
+            
         }
     }
     
+    // ok, then we reconcile the updated field of view with the visibility of the physMap
+    // oh my god we already do that as part of handleTileUpdates, FUCK WOW
+
     // last thing we do here is handle all those updates.
-    SIG('handleTileUpdates', touchedLocs);
+    SIG('handleTileUpdates', [...touchedLocs]);
+    
 };
 
 
