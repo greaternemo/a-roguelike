@@ -176,7 +176,8 @@ ARL.World.prototype.populateFirstFloor = function (aFloor) {
 
 ARL.World.prototype.populateFloor = function (aFloor) {
     // right now, we're just gonna generate 3 mobs and place them around the floor.
-    let mCnt = 3;
+    // ok time to step it up to... 13 mobs
+    let mCnt = 13;
     let newMobId = null;
     for (mCnt; mCnt > 0; mCnt -= 1) {
         newMobId = SIG('generateMob', aFloor);
@@ -322,12 +323,23 @@ ARL.World.prototype.mobDeath = function (deadMob) {
     
     // IT IS DONE
     if (whoami === 'player') {
+        SIG('narrate', 'You lose! Press any key to start a new game.');
         SCON('GAME_OVER', true);
     }
     SIG('destroyEntity', deadMob);
     SIG('handleTileUpdates', [mobLoc]);
+    
+    // Temporary wincon if you kill all the mobs, it just starts over
+    if (whoami !== 'player' && mobFloorData.fMobs.length === 1) {
+        SIG('narrate', 'You killed all the monsters on this floor!');
+        SIG('narrate', 'You win! Press any key to start a new game.');
+        SCON('GAME_OVER', true);
+    }
 };
 
+// This is the main interface via which the the physical map data is reconciled with the UI.
+// All the updates we make here are dropped into the DIRTY_LOAD, which is pushed as part of
+// the endCurrentTurn function.
 ARL.World.prototype.handleTileUpdates = function (uTiles) {
     // the arguments to this function should ALWAYS be an array
     let aLoc = null;

@@ -36,6 +36,7 @@ ARL.View.prototype.init = function () {
             // vKnown: true,
             vKnown: false,
             // vVisible: false,
+            vCursor: false,
             vColorFG: 'lightgray',
             // vColorBG: '#384148',
             vColorBG: 'black',
@@ -175,6 +176,18 @@ ARL.View.prototype.drawTileToMap = function (params) {
         );
     }
     
+    // We only draw the 'cursor' if it's there and always last if it is
+    if (targetTile.vCursor === true) {
+        targetMap.lineWidth = 2;
+        targetMap.strokeStyle = 'limegreen';
+        targetMap.strokeRect(
+            drawOrigin.oX,
+            drawOrigin.oY,
+            viewBase.cellSize.cWidth,
+            viewBase.cellSize.cHeight
+        );
+    }
+    
     // This will also need refactoring later to use more config data and less hard-coding.
 };
 
@@ -196,6 +209,61 @@ ARL.View.prototype.pushDirtyLoad = function () {
     while (dirtyLoad.length > 0) {
         dirtyLocs.push(dirtyLoad.shift());
     }
+};
+
+ARL.View.prototype.addCursorAtLoc = function (aLoc) {
+    // I'm not going to validate this input because I should be verifying it prior
+    SCON('CURSOR_LOC', aLoc);
+    // I can probably rig this up to auto-update the VIEW_MAP just by setting the CURSOR_LOC
+    // I'll mark that TODO
+    GCON('VIEW_MAP')[aLoc].vCursor = true;
+    if (GCON('DIRTY_LOCS').indexOf(aLoc) === -1) {
+        GCON('DIRTY_LOCS').push(aLoc);
+    }
+};
+
+ARL.View.prototype.delCursorAtLoc = function (aLoc) {
+    GCON('VIEW_MAP')[aLoc].vCursor = false;
+    // We check this here so we don't overwrite the currect CURSOR_LOC if we've already set it
+    if (GCON('CURSOR_LOC') === aLoc) {
+        SCON('CURSOR_LOC', false);
+    }
+    let plusLocs = SIG('getPlusForLoc', aLoc);
+    let thisLoc = null;
+    while (plusLocs.length > 0) {
+        thisLoc = plusLocs.shift();
+        if (GCON('DIRTY_LOCS').indexOf(thisLoc) === -1) {
+            GCON('DIRTY_LOCS').push(thisLoc);
+        }
+    }
+};
+
+ARL.View.prototype.tryToMoveCursorInDir = function (aDir) {
+    // Look, we're going to keep this simple right now, and that means it'll be rigid.
+    // This will probably need to be refactored at some point as I find more cursor uses, idk
+    let validLocs = new Set();
+    let playerLoc = GCON('PLAYER_MOB').mPosition.pLocXY;
+    let allDirs = GCON('ALL_DIRS').slice();
+    let thisDir = null;
+    let destLoc = null;
+    
+    // We build a set of the player's current loc and the 4 adjacent cardinal locs
+    // If the destination loc is in that set, we move the cursor.
+    validLocs.add(playerLoc);
+    while (allDirs.length > 0) {
+        thisDir = allDirs.shift();
+        validLocs.add(GCON('SIDE_REFS')[playerLoc][thisDir]);
+    }
+    destLoc = GCON('SIDE_REFS')[GCON('CURSOR_LOC')][aDir];
+    if (validLocs.has(destLoc)) {
+        SIG('moveCursorToLoc', destLoc);
+    }
+};
+
+ARL.View.prototype.moveCursorToLoc = function (aLoc) {
+    let oldLoc = GCON('CURSOR_LOC');
+    SIG('delCursorAtLoc', oldLoc);
+    SIG('addCursorAtLoc', aLoc);
 };
 
 

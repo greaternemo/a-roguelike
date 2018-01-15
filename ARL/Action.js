@@ -14,9 +14,9 @@ ARL.Action.prototype.handleCurrentTurn = function () {
 ARL.Action.prototype.endCurrentTurn = function () {
     if (!GCON('GAME_OVER')) {
         SIG('updateMobFovOnCurrentFloor');
-        // SIG('updateVisibility');
     }
     if (GCON('DIRTY_LOAD').length > 0) {
+        // shit damn this was a smart decision, thanks Neems
         SIG('pushDirtyLoad');
     }
     SCON('END_OF_TURN', true);
@@ -168,6 +168,71 @@ ARL.Action.prototype.moveMobToLoc = function (mData) {
     physLocFrom.aBody = false;
     physLocTo.aBody = aMob;
     SIG('handleTileUpdates', [locFrom, locTo]);
+};
+
+ARL.Action.prototype.doARangedAttackTowardCursor = function () {
+    // If the player selects themselves, fuck off, eh
+    if (GCON('CURSOR_LOC') === GCON('PLAYER_MOB').mPosition.pLocXY) {
+        SIG('narrate', 'You fire an arrow into the floor at your feet. Wasteful.');
+    }
+    else {
+        // This is going to be really fucking rigid but it's gonna work for now
+        let playerLoc = GCON('PLAYER_MOB').mPosition.pLocXY;
+        let playerRange = GCON('PLAYER_MOB').mVision.vFov;
+        let sideRefs = GCON('SIDE_REFS');
+        let allDirs = GCON('ALL_DIRS').slice();
+        let thisDir = null;
+        let cursorDir = null;
+        while (allDirs.length > 0) {
+            thisDir = allDirs.shift();
+            if (sideRefs[playerLoc][thisDir] === GCON('CURSOR_LOC')) {
+                cursorDir = thisDir;
+            }
+        }
+        // Now that we've calculated which dir the cursor is aiming in,
+        // we calculate our firing range and see if we hit something.
+        let calcPayload = [playerLoc, cursorDir, playerRange];
+        let inlineLocs = SIG('getInlineLocsInDir', calcPayload);
+        let thisLoc = null;
+        let curFloor = GCON('PHYS_MAP')[GCON('CURRENT_FLOOR')];
+        let fireStr = null;
+        // let inViewLocs = new Set(GCON('PLAYER_MOB').mVision.vInViewLocs);
+        // One of ??? things will happen here:
+        // - If we see unoccupied floor, we keep looking outward.
+        // - If we ONLY see unoccupied floor, we just whiff the shot.
+        // - If we see a mob, we shoot them.
+        // - If we see a wall, we shoot it and whiff the shot.
+        while (inlineLocs.length > 0) {
+            thisLoc = inlineLocs.shift();
+            if (GCON('TERRAIN_BASE')[curFloor[thisLoc].aTerrain].tFireThru === true) {
+                // if we can fire through this tile and there's someone here, we shoot them
+                if (curFloor[thisLoc].aBody) {
+                    let vicType = GET(curFloor[thisLoc].aBody).mIdentity.iType;
+                    fireStr = 'You fire an arrow at the ' + vicType + '.';
+                    SIG('narrate', fireStr);
+                    SIG('doAHit', [GCON('PLAYER_MOB').mIdentity.iEid, curFloor[thisLoc].aBody]);
+                    break;
+                }
+                // if this is the last loc in our targeting line and there's no one here to shoot, we whiff
+                else if (inlineLocs.length === 0) {
+                    fireStr = 'You fire an arrow and watch it fly away and skid to a stop on the ground.';
+                    SIG('narrate', fireStr);
+                    break;
+                }
+                // if we can fire through this tile and there's no one here to hit, we just keep looking
+            }
+            else {
+                // we can't fire through this tile, so we just hit it and whiff
+                fireStr = 'You fire an arrow right into the ' + GCON('TERRAIN_BASE')[curFloor[thisLoc].aTerrain].tName;
+                fireStr += ' and watch it break.';
+                SIG('narrate', fireStr);
+                break;
+            }
+        }
+    }
+    SIG('endCurrentInputContext');
+    SIG('delCursorAtLoc', GCON('CURSOR_LOC'));
+    SIG('endCurrentTurn');
 };
 
 ARL.Action.prototype.doAHit = function (fMobs) {

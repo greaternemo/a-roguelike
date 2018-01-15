@@ -16,7 +16,7 @@ ARL.Mob = function () {
         vFov: 5,
         vKnownLocs: [],
         vInViewLocs: [],
-    },
+    };
     /*
     this.mInventory = {
         iCarried: null,

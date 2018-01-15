@@ -20,7 +20,9 @@ ARL.Input.prototype.init = function () {
     this.inputLoop = new ARL.Loop(function () {
         return SIG('handleInput');
     }, GCON('LOOP_DELAY'));
-    
+    // set initial input context, may need to change this later
+    // probably will need to change this later
+    SCON('INPUT_CONTEXT', ['movement']);
 };
 
 ARL.Input.prototype.startListeningForInput = function () {
@@ -31,14 +33,38 @@ ARL.Input.prototype.startListeningForInput = function () {
 ARL.Input.prototype.stopListeningForInput = function () {
     // Kill any input listeners here that you spawned in startListeningForInput
     window.removeEventListener('keydown', KEYIN);
-}
+};
+
+ARL.Input.prototype.startNewInputContext = function (aCtx) {
+    // if transition is valid, add the new IC to the list at index 0
+    let contextBase = GCON('INPUT_BASE').inputContext;
+    let validTransitions = new Set(contextBase.transitions[GCON('INPUT_CONTEXT')[0]]);
+    let validContexts = new Set(contextBase.allContexts);
+    if (validContexts.has(aCtx) && validTransitions.has(aCtx)) {
+        GCON('INPUT_CONTEXT').unshift(aCtx);
+    }
+};
+
+ARL.Input.prototype.endCurrentInputContext = function () {
+    // I think this might really be it for this
+    GCON('INPUT_CONTEXT').shift();
+};
 
 ARL.Input.prototype.parseRawKeydown = function (rKey) {
     // wrapping this in a bullshit conditional now
     // I will probably want to add actual conditions to this later
     if (true) {
-        let newKey = 'key' + rKey.code.toLowerCase();
-        if (GCON('INPUT_BASE').knownKeys.indexOf(newKey) != -1) {
+        let newKey = null;
+        if (rKey.code.substr(0,3).toLowerCase() === 'key') {
+            newKey = rKey.code.toLowerCase();
+        }
+        else {
+            newKey = 'key' + rKey.code.toLowerCase();
+        }
+        // console.log(newKey);
+        let knownKeys = new Set(GCON('INPUT_BASE').knownKeys);
+        // console.log('hasKnown: ' + knownKeys.has(newKey));
+        if (knownKeys.has(newKey)) {
             SIG('queueInput', newKey);
         }
     }
@@ -46,15 +72,15 @@ ARL.Input.prototype.parseRawKeydown = function (rKey) {
 
 ARL.Input.prototype.queueInput = function (iStr) {
     let iBuffer = GCON('INPUT_BUFFER');
-    if (
+    if (GCON('GAME_OVER') === true) {
+        return RIP();
+    }
+    else if (
       GCON('LISTEN_NUMPAD') === true &&
       iBuffer.length        === 0 &&
       // we don't even queue input unless it's the player's turn, fuck it
       GCON('PLAYER_TURN')   === true) {
         iBuffer.push(iStr);
-    }
-    if (GCON('GAME_OVER') === true) {
-        return RIP();
     }
     // shit that was simple
 };
@@ -91,103 +117,187 @@ ARL.Input.prototype.pressButton = function (aButton) {
     return SIG(aButton);
 };
 
-ARL.Input.prototype.numpad1 = function () {
-    // decide what to do based on current input context
-    // TODO
+/*
+ARL.Input.prototype.NEWKEY = function () {
+    switch (GCON('INPUT_CONTEXT')[0]) {
+        case 'movement':
+            // asdf
+            break;
+        case 'targeting':
+            // fdsa
+            break;
+    }
+};
+*/
 
+ARL.Input.prototype.numpad1 = function () {
+    /*
+    switch (GCON('INPUT_CONTEXT')[0]) {
+        case 'movement':
+            // asdf
+            break;
+        case 'targeting':
+            // fdsa
+            break;
+    }
+    */
     // nothing rn
 };
 
 ARL.Input.prototype.numpad2 = function () {
-    // decide what to do based on current input context
-    // TODO
-
-    return SIG('movePlayerSouth');
+    // duplicate key
+    return SIG('keyarrowdown');
 };
 
 ARL.Input.prototype.numpad3 = function () {
-    // decide what to do based on current input context
-    // TODO
-
+    /*
+    switch (GCON('INPUT_CONTEXT')[0]) {
+        case 'movement':
+            // asdf
+            break;
+        case 'targeting':
+            // fdsa
+            break;
+    }
+    */
     // nothing rn
 };
 
 ARL.Input.prototype.numpad4 = function () {
-    // decide what to do based on current input context
-    // TODO
-
-    return SIG('movePlayerWest');
+    // duplicate key
+    return SIG('keyarrowright');
 };
 
 ARL.Input.prototype.numpad5 = function () {
-    // decide what to do based on current input context
-    // TODO
-
-    // return SIG('useStairs');
-    return SIG('makeMobPassTheTurn');
+    // duplicate key
+    return SIG('keyspace');
 };
 
 ARL.Input.prototype.numpad6 = function () {
-    // decide what to do based on current input context
-    // TODO
-
-    return SIG('movePlayerEast');
+    // duplicate key
+    return SIG('keyarrowright');
 };
 
 ARL.Input.prototype.numpad7 = function () {
-    // decide what to do based on current input context
-    // TODO
-
+    /*
+    switch (GCON('INPUT_CONTEXT')[0]) {
+        case 'movement':
+            // asdf
+            break;
+        case 'targeting':
+            // fdsa
+            break;
+    }
+    */
     // nothing rn
 };
 
 ARL.Input.prototype.numpad8 = function () {
-    // decide what to do based on current input context
-    // TODO
-
-    return SIG('movePlayerNorth');
+    // duplicate key
+    return SIG('keyarrowup');
 };
 
 ARL.Input.prototype.numpad9 = function () {
-    // decide what to do based on current input context
-    // TODO
-
+    /*
+    switch (GCON('INPUT_CONTEXT')[0]) {
+        case 'movement':
+            // asdf
+            break;
+        case 'targeting':
+            // fdsa
+            break;
+    }
+    */
     // nothing rn
 };
 
 ARL.Input.prototype.keyarrowup = function () {
-    // decide what to do based on current input context
-    // TODO
-
-    return SIG('movePlayerNorth');
+    switch (GCON('INPUT_CONTEXT')[0]) {
+        case 'movement':
+            SIG('movePlayerNorth');
+            break;
+        case 'targeting':
+            SIG('tryToMoveCursorInDir', 'N');
+            break;
+    }
 };
 
 ARL.Input.prototype.keyarrowright = function () {
-    // decide what to do based on current input context
-    // TODO
-
-    return SIG('movePlayerEast');
+    switch (GCON('INPUT_CONTEXT')[0]) {
+        case 'movement':
+            SIG('movePlayerEast');
+            break;
+        case 'targeting':
+            SIG('tryToMoveCursorInDir', 'E');
+            break;
+    }
 };
 
 ARL.Input.prototype.keyarrowdown = function () {
-    // decide what to do based on current input context
-    // TODO
-
-    return SIG('movePlayerSouth');
+    switch (GCON('INPUT_CONTEXT')[0]) {
+        case 'movement':
+            SIG('movePlayerSouth');
+            break;
+        case 'targeting':
+            SIG('tryToMoveCursorInDir', 'S');
+            break;
+    }
 };
 
 ARL.Input.prototype.keyarrowleft = function () {
-    // decide what to do based on current input context
-    // TODO
-
-    return SIG('movePlayerWest');
+    switch (GCON('INPUT_CONTEXT')[0]) {
+        case 'movement':
+            SIG('movePlayerWest');
+            break;
+        case 'targeting':
+            SIG('tryToMoveCursorInDir', 'W');
+            break;
+    }
 };
 
 ARL.Input.prototype.keyspace = function () {
-    // decide what to do based on current input context
-    // TODO
+    switch (GCON('INPUT_CONTEXT')[0]) {
+        case 'movement':
+            SIG('makeMobPassTheTurn');
+            break;
+        case 'targeting':
+            // confirms target and fires
+            // DO THAT HERE
+            SIG('doARangedAttackTowardCursor');
+            
+            // This is bullshit code to stub the input for testing:
+            // Actually this should work pretty well for cleanup if we need to do that here
+            // SIG('endCurrentInputContext');
+            // SIG('delCursorAtLoc', GCON('CURSOR_LOC'));
+            break;
+    }
+};
 
-    return SIG('makeMobPassTheTurn');
+ARL.Input.prototype.keyescape = function () {
+    switch (GCON('INPUT_CONTEXT')[0]) {
+        case 'movement':
+            // does nothing
+            break;
+        case 'targeting':
+            // cancels targeting
+            SIG('endCurrentInputContext');
+            // kill the cursor
+            SIG('delCursorAtLoc', GCON('CURSOR_LOC'));
+            break;
+    }
+};
+
+ARL.Input.prototype.keyf = function () {
+    switch (GCON('INPUT_CONTEXT')[0]) {
+        case 'movement':
+            // switch to targeting
+            SIG('startNewInputContext', 'targeting');
+            SIG('addCursorAtLoc', GCON('PLAYER_MOB').mPosition.pLocXY);
+            break;
+        case 'targeting':
+            // does nothing durr
+            break;
+    }
 };
 
 

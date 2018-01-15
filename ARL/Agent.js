@@ -31,8 +31,13 @@ ARL.Agent.prototype.compelPlayer = function () {
 };
 
 ARL.Agent.prototype.compelGobbo = function (aMob) {
-    if (SIG('canSeeThePlayer', aMob)) {
-        SIG('pursueThePlayer', aMob);
+    if (!GCON('GAME_OVER')) {
+        if (SIG('canSeeThePlayer', aMob)) {
+            SIG('pursueThePlayer', aMob);
+        }
+        else {
+            SIG('wanderInRandomDir', aMob);
+        }
     }
     else {
         SIG('wanderInRandomDir', aMob);

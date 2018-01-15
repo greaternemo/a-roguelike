@@ -124,7 +124,21 @@ ARL.BASE = {
                 'keyarrowdown',
                 'keyarrowleft',
                 'keyspace',
+                'keyescape',
+                'keyf',
             ],
+            inputContext: {
+                allContexts: [
+                    'movement',
+                    'targeting',
+                ],
+                transitions: {
+                    movement: [
+                        'targeting',
+                    ],
+                    targeting: [],
+                },
+            },
         },
         
         // base data for our PHYS_MAP
@@ -168,21 +182,29 @@ ARL.BASE = {
         terrainBase: {
             floor: {
                 tGlyph: '.',
+                tName: 'floor',
+                tFireThru: true,
                 tSeeThru: true,
                 tWalkable: true,
             },
             wall: {
                 tGlyph: '#',
+                tName: 'wall',
+                tFireThru: false,
                 tSeeThru: false,
                 tWalkable: false,
             },
             uStairs: {
                 tGlyph: '<',
+                tName: 'stairs',
+                tFireThru: true,
                 tSeeThru: true,
                 tWalkable: true,
             },
             dStairs: {
                 tGlyph: '>',
+                tName: 'stairs',
+                tFireThru: true,
                 tSeeThru: true,
                 tWalkable: true,
             },
@@ -433,6 +455,7 @@ ARL.BASE = {
                 'wanderInRandomDir',
                 'tryToMoveMobInDir',
                 'moveMobToLoc',
+                'doARangedAttackTowardCursor',
                 'doAHit',
                 'changeMobHPCur',
                 'changeMobState',
@@ -462,6 +485,8 @@ ARL.BASE = {
                 // filler line
                 'startListeningForInput',
                 'stopListeningForInput',
+                'startNewInputContext',
+                'endCurrentInputContext',
                 'parseRawKeydown',
                 'queueInput',
                 'handleInput',
@@ -480,7 +505,8 @@ ARL.BASE = {
                 'keyarrowdown',
                 'keyarrowleft',
                 'keyspace',
-                
+                'keyescape',
+                'keyf',
         ],
         Mapgen: [
                 // filler line
@@ -545,6 +571,10 @@ ARL.BASE = {
                 'entrio',
                 'detrio',
                 'generateLocs',
+                'getPlusForLoc',
+                'getCrossForLoc',
+                'getSquareForLoc',
+                'getInlineLocsInDir',
                 'fracSum',
                 'fracDiff',
                 'fracGreaterOf',
@@ -563,6 +593,10 @@ ARL.BASE = {
                 'drawTileToMap',
                 'addToDirtyLoad',
                 'pushDirtyLoad',
+                'addCursorAtLoc',
+                'delCursorAtLoc',
+                'tryToMoveCursorInDir',
+                'moveCursorToLoc',
         ],
         World: [
                 // filler line
@@ -586,7 +620,6 @@ ARL.BASE = {
                 'handleTileUpdates',
                 'updateCurrentGlyph',
                 'checkTileVisibility',
-                
         ],
     },
     
@@ -617,6 +650,7 @@ ARL.BASE = {
                 'GRID_SIDE_REFS',   // ro, table, tables of adjacent locs for each grid loc, keyed by grid dimensions
                 
                 'INPUT_BASE',       // ro, table, base data for our input system
+                'INPUT_CONTEXT',    // rw, array, a list of input layers from current to deepest
 
                 'PHYS_BASE',        // ro, table, tables of phys map base data
                 'PHYS_LOCS',        // ro, array, all representable physical locs
@@ -628,6 +662,7 @@ ARL.BASE = {
                 'DIRTY_LOCS',       // rw, array, view locs that need to be redrawn
                 'DIRTY_LOAD',       // rw, array, view locs that need to be redrawn
                 'READY_TO_DRAW',    // rw, bool, is the map ready to attempt a redraw
+                'CURSOR_LOC',       // rw, string, view loc that currently has the cursor on it for targeting
 
                 'CURRENT_FLOOR',    // rw, string, name of the floor the player is on
                 'FLOOR_LIST',       // ro, array, floor names as strings

@@ -6,6 +6,8 @@ ARL.Util = function () {};
 ARL.Util.prototype
 */
 
+// Randomization functions
+
 // returns a random integer between 0 and max-1
 ARL.Util.prototype.rand = function (max) {
     return Math.floor(Math.random() * max);
@@ -135,6 +137,10 @@ ARL.Util.prototype.randFromArray = function (rSource) {
     return this.shuffle(randSet)[0];
 };
 
+
+
+// Miscellaneous functions
+
 ARL.Util.prototype.cap = function (nStr) {
     return nStr.charAt(0).toUpperCase() + nStr.slice(1);
 };
@@ -181,6 +187,10 @@ ARL.Util.prototype.detrio = function (dxyzv) {
     return trioXYZ;
 };
 
+
+
+// Loc Calculation functions
+
 // IMPORTANT!!!!!
 // To keep the lists of locs consistent, we always generate them in the same order:
 // The outer loop increments the Y value, the inner loop increments the X.
@@ -211,9 +221,96 @@ ARL.Util.prototype.generateLocs = function(gInfo) {
     return newLocs;
 };
 
+// Returns an array containing the center loc you passed in
+// as well as the locs to the 4 cardinal directions, a plus shape
+ARL.Util.prototype.getPlusForLoc = function (aLoc) {
+    let plusLocs = [];
+    plusLocs.push(aLoc);
+    let allDirs = GCON('ALL_DIRS').slice();
+    let thisDir = null;
+    let thisLoc = null;
+    while (allDirs.length > 0) {
+        thisDir = allDirs.shift();
+        thisLoc = GCON('SIDE_REFS')[aLoc][thisDir];
+        if (thisLoc) {
+            plusLocs.push(thisLoc);
+        }
+    }
+    return plusLocs;
+};
+
+// Returns an array containing the center loc you passed in
+// as well as the locs to the 4 ordinal directions, an X shape
+ARL.Util.prototype.getCrossForLoc = function (aLoc) {
+    let crossLocs = [];
+    crossLocs.push(aLoc);
+    let diagDirs = GCON('DIAG_DIRS').slice();
+    let thisDir = null;
+    let thisLoc = null;
+    while (diagDirs.length > 0) {
+        thisDir = diagDirs.shift();
+        thisLoc = GCON('SIDE_REFS')[aLoc][thisDir];
+        if (thisLoc) {
+            crossLocs.push(thisLoc);
+        }
+    }
+    return crossLocs;
+};
+
+// Returns an array containing the center loc you passed in
+// as well as the locs to the 8 adjacent directions, a square shape
+ARL.Util.prototype.getSquareForLoc = function (aLoc) {
+    let squareLocs = [];
+    squareLocs.push(aLoc);
+    let all8Dirs = GCON('ALL_8_DIRS').slice();
+    let thisDir = null;
+    let thisLoc = null;
+    while (all8Dirs.length > 0) {
+        thisDir = all8Dirs.shift();
+        thisLoc = GCON('SIDE_REFS')[aLoc][thisDir];
+        if (thisLoc) {
+            squareLocs.push(thisLoc);
+        }
+    }
+    return squareLocs;
+};
+
+// Returns an array containing all the locs in the chosen direction from the origin loc
+ARL.Util.prototype.getInlineLocsInDir = function (params) {
+    // asdf
+    let [originLoc, chosenDir, visionRange] = params;
+    let inlineLocs = [];
+    let thisLoc = originLoc;
+    let nextLoc = null;
+    let sideRefs = GCON('SIDE_REFS');
+    let unfinished = true;
+    while (unfinished) {
+        nextLoc = sideRefs[thisLoc][chosenDir];
+        if (nextLoc) {
+            inlineLocs.push(nextLoc);
+            if (inlineLocs.length === visionRange) {
+                unfinished = false;
+            }
+            else {
+                thisLoc = nextLoc;
+            }
+        }
+        else {
+            unfinished = false;
+        }
+    }
+    // Since we'd need a valid loc to select that direction,
+    // this should always return an array with at least one loc in it.
+    return inlineLocs;
+};
+
 /*
 ARL.Util.prototype.
 */
+
+
+
+// Fraction Math functions
 
 ARL.Util.prototype.fracSum = function(params) {
     let [frA, frB] = params;
@@ -248,7 +345,7 @@ ARL.Util.prototype.fracGreaterOf = function(params) {
     let frY = frA[0] * frB[1];
     let frZ = frB[0] * frA[1];
     if (frY === frZ) {
-        return frB
+        return frB;
     } else if (frY > frZ) {
         return frA;
     } else if (frY < frZ) {
@@ -261,7 +358,7 @@ ARL.Util.prototype.fracLesserOf = function(params) {
     let frY = frA[0] * frB[1];
     let frZ = frB[0] * frA[1];
     if (frY === frZ) {
-        return frB
+        return frB;
     } else if (frY > frZ) {
         return frB;
     } else if (frY < frZ) {
