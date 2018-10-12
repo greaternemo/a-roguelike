@@ -13,23 +13,23 @@ ARL.World.prototype.init = function () {
     SCON('PHYS_MAP', {});
     SCON('FLOOR_MAP', {});
     SCON('ALL_MOBS', []);
-    let fList = GCON('FLOOR_LIST').slice();
-    let fThis = null;
-    while (fList.length > 0) {
+    let floorList = GCON('FLOOR_LIST').slice();
+    let aFloor = null;
+    while (floorList.length > 0) {
         // the order in which we do this is irrelevant, we could use pop()
-        fThis = fList.shift();
+        aFloor = floorList.shift();
         // GCON('PHYS_MAP')[fThis] = this.buildBasicFloorMap();
         // GCON('PHYS_MAP')[fThis] = this.buildGreatHallFloorMap();
         // GCON('PHYS_MAP')[fThis] = this.buildGobboctagonFloorMap();
-        SIG('generateFloor', fThis);
+        SIG('generateFloor', aFloor);
         //console.log('Generated Floor');
-        GCON('FLOOR_MAP')[fThis] = SIG('buildFloorData', fThis);
+        GCON('FLOOR_MAP')[aFloor] = SIG('buildFloorData', aFloor);
         // now with infinity percent more mobs!!!
-        if (fThis === GCON('FLOOR_LIST')[0]) {
-            SIG('populateFirstFloor', fThis);
+        if (aFloor === GCON('FLOOR_LIST')[0]) {
+            SIG('populateFirstFloor', aFloor);
         }
         else {
-            SIG('populateFloor', fThis);
+            SIG('populateFloor', aFloor);
         }
     }
 };
@@ -195,7 +195,8 @@ ARL.World.prototype.findAWalkableTile = function (aFloor) {
     while (physLocs.length > 0) {
         testLoc = physLocs.shift();
         testTile = GCON('PHYS_MAP')[aFloor][testLoc];
-        if (GCON('TERRAIN_BASE')[testTile.aTerrain].tWalkable === true) {
+        // REALLY HACKY FIX, hard-coding floor here as "walkable, safe"
+        if (GCON('TERRAIN_BASE')[testTile.aTerrain].tName === 'floor') {
             if (testTile.aBody === false) {
                 wTiles.push(testLoc);
             }
@@ -207,6 +208,17 @@ ARL.World.prototype.findAWalkableTile = function (aFloor) {
     return SIG('randFromArray', wTiles);
 };
 
+ARL.World.prototype.findRandomWalkableAndSafeSide = function (aLoc) {
+    let walkableDirs = SIG('findWalkableAndSafeSides', aLoc);
+    // We need to start validating that there are any walkable dirs at all!
+    if (walkableDirs.length) {
+        return SIG('randFromArray', walkableDirs);
+    }
+    else {
+        return false;
+    }
+};
+
 ARL.World.prototype.findRandomWalkableSide = function (aLoc) {
     let walkableDirs = SIG('findWalkableSides', aLoc);
     // We need to start validating that there are any walkable dirs at all!
@@ -216,6 +228,24 @@ ARL.World.prototype.findRandomWalkableSide = function (aLoc) {
     else {
         return false;
     }
+};
+
+ARL.World.prototype.findWalkableAndSafeSides = function (aLoc) {
+    let allDirs = GCON('ALL_DIRS').slice();
+    let aDir = null;
+    let walkableDirs = [];
+    while (allDirs.length > 0) {
+        // order is irrelevant
+        aDir = allDirs.shift();
+        if (SIG('isSideWalkableAndSafe', [aLoc, aDir]) === true) {
+            walkableDirs.push(aDir);
+        }
+    }
+    // RIGHT NOW there is no way in the game for a mob to be standing in a space
+    // that is surrounded by impassible terrain on all sides. The mapgen just won't do it.
+    // BUT IN THEORY, IF THEY COULD, this would return an empty array, so we need to
+    // validate the data that's being returned here.
+    return walkableDirs;
 };
 
 ARL.World.prototype.findWalkableSides = function (aLoc) {
@@ -235,6 +265,19 @@ ARL.World.prototype.findWalkableSides = function (aLoc) {
     // validate the data that's being returned here.
     return walkableDirs;
 };
+
+ARL.World.prototype.isSideWalkableAndSafe = function (lData) {
+    let [aLoc, aSide] = lData;
+    let locToSide = GCON('SIDE_REFS')[aLoc][aSide];
+    if (locToSide === false) {
+        return false;
+    }
+    let floorMap = GCON('PHYS_MAP')[GCON('CURRENT_FLOOR')];
+    const isWalkable = GCON('TERRAIN_BASE')[floorMap[locToSide].aTerrain].tWalkable;
+    const isSafe = (() => floorMap[locToSide].aTerrain == 'abyss' ? false : true )();
+    if (isWalkable && isSafe) { return true; }
+    return false;
+}
 
 ARL.World.prototype.isSideWalkable = function (lData) {
     let [aLoc, aSide] = lData;

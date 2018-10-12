@@ -134,6 +134,9 @@ ARL.Util.prototype.shuffle = function (aDeck) {
 
 ARL.Util.prototype.randFromArray = function (rSource) {
     let randSet = rSource.slice();
+    if (randSet.length < 1) {
+        console.log("Probably about to break due to passing an empty array into randFromArray, which returns undefined.");
+    }
     return this.shuffle(randSet)[0];
 };
 
@@ -302,6 +305,41 @@ ARL.Util.prototype.getInlineLocsInDir = function (params) {
     // Since we'd need a valid loc to select that direction,
     // this should always return an array with at least one loc in it.
     return inlineLocs;
+};
+
+// Returns a string representing the dir from one loc to another
+ARL.Util.prototype.getDirBetweenTwoLocs = function (params) {
+    let[originLoc, targetLoc] = params;
+    let facingDir = '';
+    
+    let[oX, oY] = originLoc.split(',');
+    oX = parseInt(oX);
+    oY = parseInt(oY);
+    let[tX, tY] = targetLoc.split(',');
+    tX = parseInt(tX);
+    tY = parseInt(tY);
+
+    if (mY > pY) {
+        // north
+        facingDir += 'N';
+    } else if (mY < pY) {
+        // south
+        facingDir += 'S';
+    } else {
+        // same y coord, nothing
+    }
+
+    if (mX > pX) {
+        // west
+        facingDir += 'W';
+    } else if (mX < pX) {
+        // east
+        facingDir += 'E';
+    } else {
+        // same x coord, nothing
+    }
+
+    return facingDir;
 };
 
 /*

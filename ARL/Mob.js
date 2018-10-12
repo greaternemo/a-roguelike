@@ -17,6 +17,30 @@ ARL.Mob = function () {
         vKnownLocs: [],
         vInViewLocs: [],
     };
+    // I hate this.
+    this.mActionState = {
+        asCur: null,
+    };
+    /*
+    We can and probably should refactor a bunch of this eventually.
+    Not just doing away with ARL.Mob as a namespace/type but also resorting some of the
+    stat groupings that we're using to generalize them.
+    
+    I'm talking about things like:
+    this.mSenses = {
+        sCanSee: true,
+        sCanHear: true,
+        sCanSmell: true,
+        sVisionRange: 5,
+        sHearingRange: 8,
+    };
+    this.mMemory = {
+        mKnownLocs: [],
+        mInViewLocs: [],
+        mOtherShit: [],
+    };
+    
+    */
     /*
     this.mInventory = {
         iCarried: null,

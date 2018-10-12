@@ -165,7 +165,7 @@ ARL.Input.prototype.numpad3 = function () {
 
 ARL.Input.prototype.numpad4 = function () {
     // duplicate key
-    return SIG('keyarrowright');
+    return SIG('keyarrowleft');
 };
 
 ARL.Input.prototype.numpad5 = function () {
@@ -179,17 +179,8 @@ ARL.Input.prototype.numpad6 = function () {
 };
 
 ARL.Input.prototype.numpad7 = function () {
-    /*
-    switch (GCON('INPUT_CONTEXT')[0]) {
-        case 'movement':
-            // asdf
-            break;
-        case 'targeting':
-            // fdsa
-            break;
-    }
-    */
-    // nothing rn
+    // duplicate key
+    return SIG('keyescape');
 };
 
 ARL.Input.prototype.numpad8 = function () {
@@ -198,17 +189,8 @@ ARL.Input.prototype.numpad8 = function () {
 };
 
 ARL.Input.prototype.numpad9 = function () {
-    /*
-    switch (GCON('INPUT_CONTEXT')[0]) {
-        case 'movement':
-            // asdf
-            break;
-        case 'targeting':
-            // fdsa
-            break;
-    }
-    */
-    // nothing rn
+    // duplicate key
+    return SIG('keyf');
 };
 
 ARL.Input.prototype.keyarrowup = function () {
@@ -259,16 +241,15 @@ ARL.Input.prototype.keyspace = function () {
     switch (GCON('INPUT_CONTEXT')[0]) {
         case 'movement':
             SIG('makeMobPassTheTurn');
+            // MEGA DEBUG SHORTCUT FOR RAPID MAP GENERATION
+            // SCON('GAME_OVER', true);
+            // SIG('endCurrentTurn');
+            // console.clear();
             break;
         case 'targeting':
             // confirms target and fires
             // DO THAT HERE
             SIG('doARangedAttackTowardCursor');
-            
-            // This is bullshit code to stub the input for testing:
-            // Actually this should work pretty well for cleanup if we need to do that here
-            // SIG('endCurrentInputContext');
-            // SIG('delCursorAtLoc', GCON('CURSOR_LOC'));
             break;
     }
 };
