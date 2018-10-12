@@ -69,15 +69,17 @@
                 <br>
                 <br>
                 <code id="instructions1">Controls: use the numpad above ^^^</code><br>
-                <code id="instructions2">2/4/6/8 - move</code><br>
-                <code id="instructions3">5 - wait</code><br>
-                <code id="instructions4">If you die, any button above will start a new game</code><br>
+                <code id="instructions2">2/4/6/8 or arrow keys - move</code><br>
+                <code id="instructions3">5 or space - wait</code><br>
+                <code id="instructions4">Press F to fire an arrow, 5 or space to confirm target</code><br>
             </div>
             
             <div id="msg_panel">
             </div>
             
             <div id="map_panel">
+                <canvas id="map_canvas" width=420 height=480></canvas>
+                <canvas id="map_buffer" width=420 height=480></canvas>
             </div>
         
         </div>
@@ -92,12 +94,14 @@
     <script src="ARL/Mob.js"></script>
     <script src="ARL/Loop.js"></script>
     <script src="ARL/View.js"></script>
+    <script src="ARL/Mapgen.js"></script>
     <script src="ARL/World.js"></script>
+    <script src="ARL/Fov.js"></script>
     <script src="ARL/Action.js"></script>
     <script src="ARL/Agent.js"></script>
     <script src="ARL/Turner.js"></script>
     <script src="ARL/Input.js"></script>
-    <script src="ARL/Arena.js"></script>
+    <!-- <script src="ARL/Arena.js"></script> -->
     <script src="ARL/Game.js"></script>
     <script src="ARL/Narrator.js"></script>
     

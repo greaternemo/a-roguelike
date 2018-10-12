@@ -6,6 +6,8 @@ ARL.Util = function () {};
 ARL.Util.prototype
 */
 
+// Randomization functions
+
 // returns a random integer between 0 and max-1
 ARL.Util.prototype.rand = function (max) {
     return Math.floor(Math.random() * max);
@@ -16,6 +18,12 @@ ARL.Util.prototype.aDie = function (sides) {
     return this.rand(sides) + 1;
 };
 
+// Returns a 0 or 1
+ARL.Util.prototype.aCoin = function () {
+    return this.aDie(2) - 1;
+};
+
+// Returns a 1 or 2
 ARL.Util.prototype.d2 = function () {
     return this.aDie(2);
 };
@@ -126,8 +134,15 @@ ARL.Util.prototype.shuffle = function (aDeck) {
 
 ARL.Util.prototype.randFromArray = function (rSource) {
     let randSet = rSource.slice();
+    if (randSet.length < 1) {
+        console.log("Probably about to break due to passing an empty array into randFromArray, which returns undefined.");
+    }
     return this.shuffle(randSet)[0];
 };
+
+
+
+// Miscellaneous functions
 
 ARL.Util.prototype.cap = function (nStr) {
     return nStr.charAt(0).toUpperCase() + nStr.slice(1);
@@ -142,7 +157,8 @@ ARL.Util.prototype.scrollToNew = function (panel) {
     return;
 };
 
-ARL.Util.prototype.enpair = function (dxv, dyv) {
+ARL.Util.prototype.enpair = function (params) {
+    let [dxv, dyv] = params;
     let pairStr = '';
     pairStr += dxv.toString() + ',' + dyv.toString();
     return pairStr;
@@ -156,7 +172,8 @@ ARL.Util.prototype.depair = function (dxyv) {
     return pairXY;
 };
 
-ARL.Util.prototype.entrio = function (dxv, dyv, dzv) {
+ARL.Util.prototype.entrio = function (params) {
+    let [dxv, dyv, dzv] = params;
     let trioStr = '';
     trioStr += dxv.toString() + ',';
     trioStr += dyv.toString() + ',';
@@ -173,6 +190,10 @@ ARL.Util.prototype.detrio = function (dxyzv) {
     return trioXYZ;
 };
 
+
+
+// Loc Calculation functions
+
 // IMPORTANT!!!!!
 // To keep the lists of locs consistent, we always generate them in the same order:
 // The outer loop increments the Y value, the inner loop increments the X.
@@ -180,7 +201,7 @@ ARL.Util.prototype.detrio = function (dxyzv) {
 // and will go to the right through each row before continuing at the start of the
 // next row down.
 
-ARL.Util.prototype.generateLocsForGrid = function (gInfo) {
+ARL.Util.prototype.generateLocs = function(gInfo) {
     /*
     gInfo should be in this form:
         gInfo = {
@@ -203,14 +224,273 @@ ARL.Util.prototype.generateLocsForGrid = function (gInfo) {
     return newLocs;
 };
 
+// Returns an array containing the center loc you passed in
+// as well as the locs to the 4 cardinal directions, a plus shape
+ARL.Util.prototype.getPlusForLoc = function (aLoc) {
+    let plusLocs = [];
+    plusLocs.push(aLoc);
+    let allDirs = GCON('ALL_DIRS').slice();
+    let thisDir = null;
+    let thisLoc = null;
+    while (allDirs.length > 0) {
+        thisDir = allDirs.shift();
+        thisLoc = GCON('SIDE_REFS')[aLoc][thisDir];
+        if (thisLoc) {
+            plusLocs.push(thisLoc);
+        }
+    }
+    return plusLocs;
+};
+
+// Returns an array containing the center loc you passed in
+// as well as the locs to the 4 ordinal directions, an X shape
+ARL.Util.prototype.getCrossForLoc = function (aLoc) {
+    let crossLocs = [];
+    crossLocs.push(aLoc);
+    let diagDirs = GCON('DIAG_DIRS').slice();
+    let thisDir = null;
+    let thisLoc = null;
+    while (diagDirs.length > 0) {
+        thisDir = diagDirs.shift();
+        thisLoc = GCON('SIDE_REFS')[aLoc][thisDir];
+        if (thisLoc) {
+            crossLocs.push(thisLoc);
+        }
+    }
+    return crossLocs;
+};
+
+// Returns an array containing the center loc you passed in
+// as well as the locs to the 8 adjacent directions, a square shape
+ARL.Util.prototype.getSquareForLoc = function (aLoc) {
+    let squareLocs = [];
+    squareLocs.push(aLoc);
+    let all8Dirs = GCON('ALL_8_DIRS').slice();
+    let thisDir = null;
+    let thisLoc = null;
+    while (all8Dirs.length > 0) {
+        thisDir = all8Dirs.shift();
+        thisLoc = GCON('SIDE_REFS')[aLoc][thisDir];
+        if (thisLoc) {
+            squareLocs.push(thisLoc);
+        }
+    }
+    return squareLocs;
+};
+
+// Returns an array containing all the locs in the chosen direction from the origin loc
+ARL.Util.prototype.getInlineLocsInDir = function (params) {
+    // asdf
+    let [originLoc, chosenDir, visionRange] = params;
+    let inlineLocs = [];
+    let thisLoc = originLoc;
+    let nextLoc = null;
+    let sideRefs = GCON('SIDE_REFS');
+    let unfinished = true;
+    while (unfinished) {
+        nextLoc = sideRefs[thisLoc][chosenDir];
+        if (nextLoc) {
+            inlineLocs.push(nextLoc);
+            if (inlineLocs.length === visionRange) {
+                unfinished = false;
+            }
+            else {
+                thisLoc = nextLoc;
+            }
+        }
+        else {
+            unfinished = false;
+        }
+    }
+    // Since we'd need a valid loc to select that direction,
+    // this should always return an array with at least one loc in it.
+    return inlineLocs;
+};
+
+// Returns a string representing the dir from one loc to another
+ARL.Util.prototype.getDirBetweenTwoLocs = function (params) {
+    let[originLoc, targetLoc] = params;
+    let facingDir = '';
+    
+    let[oX, oY] = originLoc.split(',');
+    oX = parseInt(oX);
+    oY = parseInt(oY);
+    let[tX, tY] = targetLoc.split(',');
+    tX = parseInt(tX);
+    tY = parseInt(tY);
+
+    if (mY > pY) {
+        // north
+        facingDir += 'N';
+    } else if (mY < pY) {
+        // south
+        facingDir += 'S';
+    } else {
+        // same y coord, nothing
+    }
+
+    if (mX > pX) {
+        // west
+        facingDir += 'W';
+    } else if (mX < pX) {
+        // east
+        facingDir += 'E';
+    } else {
+        // same x coord, nothing
+    }
+
+    return facingDir;
+};
+
+/*
+ARL.Util.prototype.
+*/
+
+
+
+// Fraction Math functions
+
+ARL.Util.prototype.fracSum = function(params) {
+    let [frA, frB] = params;
+    let frSum = [null, null];
+    if (frA[1] === frB[1]) {
+        // matching denominators, we don't have to split these any further
+        frSum[0] = frA[0] + frB[0];
+        frSum[1] = frA[1];
+    } else {
+        frSum[0] = (frA[0] * frB[1]) + (frB[0] * frA[1]);
+        frSum[1] = frA[1] * frB[1];
+    }
+    return frSum;
+};
+
+ARL.Util.prototype.fracDiff = function(params) {
+    let [frA, frB] = params;
+    let frDiff = [null, null];
+    if (frA[1] === frB[1]) {
+        // matching denominators, we don't have to split these any further
+        frDiff[0] = frA[0] - frB[0];
+        frDiff[1] = frA[1];
+    } else {
+        frDiff[0] = (frA[0] * frB[1]) - (frB[0] * frA[1]);
+        frDiff[1] = frA[1] * frB[1];
+    }
+    return frDiff;
+};
+
+ARL.Util.prototype.fracGreaterOf = function(params) {
+    let [frA, frB] = params;
+    let frY = frA[0] * frB[1];
+    let frZ = frB[0] * frA[1];
+    if (frY === frZ) {
+        return frB;
+    } else if (frY > frZ) {
+        return frA;
+    } else if (frY < frZ) {
+        return frB;
+    }
+};
+
+ARL.Util.prototype.fracLesserOf = function(params) {
+    let [frA, frB] = params;
+    let frY = frA[0] * frB[1];
+    let frZ = frB[0] * frA[1];
+    if (frY === frZ) {
+        return frB;
+    } else if (frY > frZ) {
+        return frB;
+    } else if (frY < frZ) {
+        return frA;
+    }
+};
+
+ARL.Util.prototype.fracEqualTo = function(params) {
+    let [frA, frB] = params;
+    let frY = frA[0] * frB[1];
+    let frZ = frB[0] * frA[1];
+    if (frY === frZ) {
+        return true;
+    } else {
+        return false;
+    }
+};
+
+ARL.Util.prototype.fracGreaterThan = function(params) {
+    let [frA, frB] = params;
+    let frY = frA[0] * frB[1];
+    let frZ = frB[0] * frA[1];
+    if (frY > frZ) {
+        return true;
+    } else {
+        return false;
+    }
+};
+
+ARL.Util.prototype.fracLesserThan = function(params) {
+    let [frA, frB] = params;
+    let frY = frA[0] * frB[1];
+    let frZ = frB[0] * frA[1];
+    if (frY < frZ) {
+        return true;
+    } else {
+        return false;
+    }
+};
+
+ARL.Util.prototype.fracGreaterOrEqual = function(params) {
+    let [frA, frB] = params;
+    let frY = frA[0] * frB[1];
+    let frZ = frB[0] * frA[1];
+    if (frY > frZ || frY === frZ) {
+        return true;
+    } else {
+        return false;
+    }
+};
+
+ARL.Util.prototype.fracLesserOrEqual = function(params) {
+    let [frA, frB] = params;
+    let frY = frA[0] * frB[1];
+    let frZ = frB[0] * frA[1];
+    if (frY < frZ || frY === frZ) {
+        return true;
+    } else {
+        return false;
+    }
+};
+
+ARL.Util.prototype.intGreaterOf = function(params) {
+    let [intA, intB] = params;
+    if (intA === intB) {
+        return intB;
+    } else if (intA > intB) {
+        return intA;
+    } else if (intA < intB) {
+        return intB;
+    }
+};
+
+ARL.Util.prototype.intLesserOf = function(params) {
+    let [intA, intB] = params;
+    if (intA === intB) {
+        return intB;
+    } else if (intA > intB) {
+        return intB;
+    } else if (intA < intB) {
+        return intA;
+    }
+};
+
+
+
 
 
 /*
-*
-*
-*
-* Courtesy Space
-*
-*
-*
-*/
+ *
+ *
+ *
+ * Courtesy Space
+ *
+ *
+ *
+ */

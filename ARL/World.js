@@ -1,12 +1,7 @@
 // ARL.World
 // Namespace for the game world
 
-ARL.World = function () {
-
-    // this.wFloorList = [];
-    // this.wFloorMap = {};
-    
-    this.init();
+ARL.World = function () {    
 };
 
 /*
@@ -16,23 +11,25 @@ ARL.World.prototype.
 ARL.World.prototype.init = function () {
     // build the world framework
     SCON('PHYS_MAP', {});
-    SCON('FLOOR_DATA', {});
+    SCON('FLOOR_MAP', {});
     SCON('ALL_MOBS', []);
-    let fList = GCON('FLOOR_LIST').slice();
-    let fThis = null;
-    while (fList.length > 0) {
+    let floorList = GCON('FLOOR_LIST').slice();
+    let aFloor = null;
+    while (floorList.length > 0) {
         // the order in which we do this is irrelevant, we could use pop()
-        fThis = fList.shift();
+        aFloor = floorList.shift();
         // GCON('PHYS_MAP')[fThis] = this.buildBasicFloorMap();
         // GCON('PHYS_MAP')[fThis] = this.buildGreatHallFloorMap();
-        GCON('PHYS_MAP')[fThis] = this.buildGobboctagonFloorMap();
-        GCON('FLOOR_DATA')[fThis] = this.buildFloorData(fThis);
+        // GCON('PHYS_MAP')[fThis] = this.buildGobboctagonFloorMap();
+        SIG('generateFloor', aFloor);
+        //console.log('Generated Floor');
+        GCON('FLOOR_MAP')[aFloor] = SIG('buildFloorData', aFloor);
         // now with infinity percent more mobs!!!
-        if (fThis === GCON('FLOOR_LIST')[0]) {
-            this.populateFirstFloor(fThis);
+        if (aFloor === GCON('FLOOR_LIST')[0]) {
+            SIG('populateFirstFloor', aFloor);
         }
         else {
-            this.populateFloor(fThis);
+            SIG('populateFloor', aFloor);
         }
     }
 };
@@ -47,69 +44,15 @@ ARL.World.prototype.generateBasicTile = function () {
         aTerrain: 'wall',
         // calculated on the fly
         aGlyph: '#',
+        // calculated on the fly
+        // false is the default, enabled true for testing
+        aKnown: false,
+        // aKnown: true,
+        // calculated on the fly
+        // is the tile visible to the player mob
+        aVisible: false,
     };
     return aTile;
-};
-
-ARL.World.prototype.generateGridAndNodeLocs = function () {
-    // generate the node locs and grid locs and the conversion table for them
-    let gridSize = GCON('GRID_SIZE');
-    SCON('GRID_LOCS', SIG('generateLocsForGrid', {
-        xMin: 0,
-        xMax: gridSize.gWidth,
-        yMin: 0,
-        yMax: gridSize.gHeight,
-    }));
-
-    let nodeSize = GCON('NODE_SIZE');
-    // an array of locs between '0,0' and '10,10', inclusive
-    // later we'll need to translate these based on the gridLoc
-    // e.g., '0,0' in node '1,1' will become '10,10'
-    // this will be something like
-    // NW corner is (nodeLoc * gridLoc),(nodeLoc * gridLoc)
-    // NE corner is ((nodeLoc * (gridLoc + 1)) - 1),(nodeLoc * gridLoc)
-    // SE corner is ((nodeLoc * (gridLoc + 1)) - 1),((nodeLoc * (gridLoc + 1)) - 1)
-    // SW corner is (nodeLoc * gridLoc),((nodeLoc * (gridLoc + 1)) - 1)
-    SCON('NODE_LOCS', SIG('generateLocsForGrid', {
-        xMin: 0,
-        xMax: nodeSize.nWidth,
-        yMin: 0,
-        yMax: nodeSize.nHeight,
-    }));
-    
-    let gridLocs = GCON('GRID_LOCS').slice();
-    let nodeLocs = GCON('NODE_LOCS').slice();
-    
-    // then we assemble and assign the grid map
-    let gridMap = {};
-    let aGridLoc = null;
-    let aNodeLoc = null;
-    let aPhysLoc = null;
-    let gIdx = null;
-    let gLen = gridLocs.length;
-    let nIdx = null;
-    let nLen = nodeLocs.length;
-    let gdx = null;
-    let gdy = null;
-    let ndx = null;
-    let ndy = null;
-    let pdx = null;
-    let pdy = null;
-    
-    for (gIdx = 0; gIdx < gLen; gIdx += 1) {
-        aGridLoc = gridLocs[gIdx];
-        gridMap[aGridLoc] = {};
-        for (nIdx = 0; nIdx < nLen; nIdx += 1) {
-            aNodeLoc = nodeLocs[nIdx];
-            [gdx, gdy] = aGridLoc.split(',');
-            [ndx, ndy] = aNodeLoc.split(',');
-            pdx = (parseInt(gdx) * parseInt(ndx)) + parseInt(ndx);
-            pdy = (parseInt(gdy) * parseInt(ndy)) + parseInt(ndy);
-            aPhysLoc = pdx.toString() + ',' + pdy.toString();
-            gridMap[aGridLoc][aNodeLoc] = aPhysLoc;
-        }
-    }
-    SCON('GRID_MAP', gridMap);
 };
 
 ARL.World.prototype.buildFloorData = function (aFloor) {
@@ -131,7 +74,7 @@ ARL.World.prototype.buildBasicFloorMap = function () {
     let physLocs = GCON('PHYS_LOCS').slice();
     while (physLocs.length) {
         newLoc = physLocs.shift();
-        newTile = this.generateBasicTile();
+        newTile = SIG('generateBasicTile');
         newTile.locXY = newLoc;
         newFloorMap[newLoc] = newTile;
     }
@@ -147,7 +90,7 @@ ARL.World.prototype.buildGreatHallFloorMap = function () {
     let physLocs = GCON('PHYS_LOCS').slice();
     while (physLocs.length) {
         newLoc = physLocs.shift();
-        newTile = this.generateBasicTile();
+        newTile = SIG('generateBasicTile');
         newTile.locXY = newLoc;
         nX = newLoc.split(',')[0];
         nY = newLoc.split(',')[1];
@@ -192,7 +135,7 @@ ARL.World.prototype.buildGobboctagonFloorMap = function () {
     }
     while (physLocs.length) {
         newLoc = physLocs.shift();
-        newTile = this.generateBasicTile();
+        newTile = SIG('generateBasicTile');
         newTile.locXY = newLoc;
         // this needs to be refactored so that your values aren't hard-coded
         if(octagon.indexOf(newLoc) === -1) {
@@ -207,40 +150,40 @@ ARL.World.prototype.buildGobboctagonFloorMap = function () {
     return newFloorMap;
 };
 
-ARL.World.prototype.generateFloorLayout = function (aFloor) {
-    // TODO, moving a lot of the loc generation to ARL.BASE
+ARL.World.prototype.generateFloor = function (aFloor) {
+    // we're gonna hardcode this for now
+    let layoutType = 'standard';
     
-    // Now we start this, the most grave of tasks
-    aFloor = null; // fix this ok
-    
-    // Ok, what in heck do we care about?
-    let floorOuterWall = [];
-    let roomInnerTiles = [];
-    let roomOuterTiles = [];
+    GCON('PHYS_MAP')[aFloor] = SIG('buildBasicFloorMap');
+    //console.log('Built basic floor map for ' + aFloor);
+    SIG('generateFloorLayout', layoutType);
+    //console.log('Generated ' + layoutType + ' floor layout for ' + aFloor);
+    SIG('mapFinishedLayoutToFloor', [layoutType, aFloor]);
 };
 
 ARL.World.prototype.populateFirstFloor = function (aFloor) {
     // create the player mob
-    let newMobId = this.generatePlayer(aFloor);
+    let newMobId = SIG('generatePlayer', aFloor);
     // assign the mob to a location on the floor
-    GCON('PLAYER_MOB').mPosition.pLocXY = this.findAWalkableTile(aFloor);
+    GCON('PLAYER_MOB').mPosition.pLocXY = SIG('findAWalkableTile', aFloor);
     // note the phys loc as occupied
     GCON('PHYS_MAP')[aFloor][GCON('PLAYER_MOB').mPosition.pLocXY].aBody = newMobId;
     // add the mob to the floor's mob array
-    GCON('FLOOR_DATA')[aFloor].fMobs.push(newMobId);
+    GCON('FLOOR_MAP')[aFloor].fMobs.push(newMobId);
     // now do the nonplayer mobs
-    this.populateFloor(aFloor);
+    SIG('populateFloor', aFloor);
 };
 
 ARL.World.prototype.populateFloor = function (aFloor) {
     // right now, we're just gonna generate 3 mobs and place them around the floor.
-    let mCnt = 3;
+    // ok time to step it up to... 13 mobs
+    let mCnt = 13;
     let newMobId = null;
     for (mCnt; mCnt > 0; mCnt -= 1) {
-        newMobId = this.generateMob(aFloor);
-        GET(newMobId).mPosition.pLocXY = this.findAWalkableTile(aFloor);
+        newMobId = SIG('generateMob', aFloor);
+        GET(newMobId).mPosition.pLocXY = SIG('findAWalkableTile', aFloor);
         GCON('PHYS_MAP')[aFloor][GET(newMobId).mPosition.pLocXY].aBody = newMobId;
-        GCON('FLOOR_DATA')[aFloor].fMobs.push(newMobId);
+        GCON('FLOOR_MAP')[aFloor].fMobs.push(newMobId);
     }
 };
 
@@ -252,7 +195,8 @@ ARL.World.prototype.findAWalkableTile = function (aFloor) {
     while (physLocs.length > 0) {
         testLoc = physLocs.shift();
         testTile = GCON('PHYS_MAP')[aFloor][testLoc];
-        if (GCON('TERRAIN_BASE')[testTile.aTerrain].tWalkable === true) {
+        // REALLY HACKY FIX, hard-coding floor here as "walkable, safe"
+        if (GCON('TERRAIN_BASE')[testTile.aTerrain].tName === 'floor') {
             if (testTile.aBody === false) {
                 wTiles.push(testLoc);
             }
@@ -264,9 +208,44 @@ ARL.World.prototype.findAWalkableTile = function (aFloor) {
     return SIG('randFromArray', wTiles);
 };
 
+ARL.World.prototype.findRandomWalkableAndSafeSide = function (aLoc) {
+    let walkableDirs = SIG('findWalkableAndSafeSides', aLoc);
+    // We need to start validating that there are any walkable dirs at all!
+    if (walkableDirs.length) {
+        return SIG('randFromArray', walkableDirs);
+    }
+    else {
+        return false;
+    }
+};
+
 ARL.World.prototype.findRandomWalkableSide = function (aLoc) {
     let walkableDirs = SIG('findWalkableSides', aLoc);
-    return SIG('randFromArray', walkableDirs);
+    // We need to start validating that there are any walkable dirs at all!
+    if (walkableDirs.length) {
+        return SIG('randFromArray', walkableDirs);
+    }
+    else {
+        return false;
+    }
+};
+
+ARL.World.prototype.findWalkableAndSafeSides = function (aLoc) {
+    let allDirs = GCON('ALL_DIRS').slice();
+    let aDir = null;
+    let walkableDirs = [];
+    while (allDirs.length > 0) {
+        // order is irrelevant
+        aDir = allDirs.shift();
+        if (SIG('isSideWalkableAndSafe', [aLoc, aDir]) === true) {
+            walkableDirs.push(aDir);
+        }
+    }
+    // RIGHT NOW there is no way in the game for a mob to be standing in a space
+    // that is surrounded by impassible terrain on all sides. The mapgen just won't do it.
+    // BUT IN THEORY, IF THEY COULD, this would return an empty array, so we need to
+    // validate the data that's being returned here.
+    return walkableDirs;
 };
 
 ARL.World.prototype.findWalkableSides = function (aLoc) {
@@ -280,8 +259,25 @@ ARL.World.prototype.findWalkableSides = function (aLoc) {
             walkableDirs.push(aDir);
         }
     }
+    // RIGHT NOW there is no way in the game for a mob to be standing in a space
+    // that is surrounded by impassible terrain on all sides. The mapgen just won't do it.
+    // BUT IN THEORY, IF THEY COULD, this would return an empty array, so we need to
+    // validate the data that's being returned here.
     return walkableDirs;
 };
+
+ARL.World.prototype.isSideWalkableAndSafe = function (lData) {
+    let [aLoc, aSide] = lData;
+    let locToSide = GCON('SIDE_REFS')[aLoc][aSide];
+    if (locToSide === false) {
+        return false;
+    }
+    let floorMap = GCON('PHYS_MAP')[GCON('CURRENT_FLOOR')];
+    const isWalkable = GCON('TERRAIN_BASE')[floorMap[locToSide].aTerrain].tWalkable;
+    const isSafe = (() => floorMap[locToSide].aTerrain == 'abyss' ? false : true )();
+    if (isWalkable && isSafe) { return true; }
+    return false;
+}
 
 ARL.World.prototype.isSideWalkable = function (lData) {
     let [aLoc, aSide] = lData;
@@ -336,7 +332,7 @@ ARL.World.prototype.mobDeath = function (deadMob) {
     let prevPrevMobIdx = null;
     let mobIdx = null;
     let mobFloor = GET(deadMob).mPosition.pCurFloor;
-    let mobFloorData = GCON('FLOOR_DATA')[mobFloor];    
+    let mobFloorData = GCON('FLOOR_MAP')[mobFloor];    
     let mobLoc = GET(deadMob).mPosition.pLocXY;
     let physLoc = GCON('PHYS_MAP')[mobFloor][mobLoc];
 
@@ -370,18 +366,32 @@ ARL.World.prototype.mobDeath = function (deadMob) {
     
     // IT IS DONE
     if (whoami === 'player') {
+        SIG('narrate', 'You lose! Press any key to start a new game.');
         SCON('GAME_OVER', true);
     }
     SIG('destroyEntity', deadMob);
     SIG('handleTileUpdates', [mobLoc]);
+    
+    // Temporary wincon if you kill all the mobs, it just starts over
+    if (whoami !== 'player' && mobFloorData.fMobs.length === 1) {
+        SIG('narrate', 'You killed all the monsters on this floor!');
+        SIG('narrate', 'You win! Press any key to start a new game.');
+        SCON('GAME_OVER', true);
+    }
 };
 
+// This is the main interface via which the the physical map data is reconciled with the UI.
+// All the updates we make here are dropped into the DIRTY_LOAD, which is pushed as part of
+// the endCurrentTurn function.
 ARL.World.prototype.handleTileUpdates = function (uTiles) {
     // the arguments to this function should ALWAYS be an array
     let aLoc = null;
     while (uTiles.length > 0) {
         // order is irrelevant
         aLoc = uTiles.shift();
+        if (!GCON('GAME_OVER')) {
+            SIG('checkTileVisibility', aLoc);
+        }
         SIG('updateCurrentGlyph', aLoc);
         
     }
@@ -389,8 +399,8 @@ ARL.World.prototype.handleTileUpdates = function (uTiles) {
 
 ARL.World.prototype.updateCurrentGlyph = function (aLoc) {
     let physTile = GCON('PHYS_MAP')[GCON('CURRENT_FLOOR')][aLoc];
-    if (physTile.aBody !== false) {
-        // draw the body if there is one
+    if (physTile.aBody !== false && physTile.aVisible === true) {
+        // draw the body if there is one and the tile is visible
         physTile.aGlyph = GCON('MOB_BASE')[GET(physTile.aBody).mIdentity.iType].mGlyph;
     }
     else {
@@ -398,7 +408,29 @@ ARL.World.prototype.updateCurrentGlyph = function (aLoc) {
         physTile.aGlyph = GCON('TERRAIN_BASE')[physTile.aTerrain].tGlyph;
     }
     // mark the tile dirty
-    GCON('DIRTY_LOCS').push(aLoc);
+    SIG('addToDirtyLoad', [aLoc]);
+};
+
+ARL.World.prototype.checkTileVisibility = function (aLoc) {
+    let physTile = GCON('PHYS_MAP')[GCON('CURRENT_FLOOR')][aLoc];
+    let knownLocs = GCON('PLAYER_MOB').mVision.vKnownLocs;
+    let inViewLocs = GCON('PLAYER_MOB').mVision.vInViewLocs;
+    
+    // if we haven't seen it at all, it's shrouded in darkness
+    if (knownLocs.indexOf(aLoc) === -1) {
+        physTile.aKnown = false;
+        physTile.aVisible = false;
+    }
+    // if we have seen it, it's not dark, but is it in view?
+    else {
+        physTile.aKnown = true;
+        if (inViewLocs.indexOf(aLoc) === -1) {
+            physTile.aVisible = false;
+        }
+        else {
+            physTile.aVisible = true;
+        }
+    }
 };
 
 

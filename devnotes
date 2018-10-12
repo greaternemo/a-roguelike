@@ -1,0 +1,2 @@
+Refactor all uses of MAP_SIZE to use PHYS_BASE/VIEW_BASE.mapSize
+

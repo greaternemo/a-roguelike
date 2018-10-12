@@ -12,7 +12,7 @@ ARL.Narrator.prototype.init = function () {
     msgPanel.appendChild(aMsg);
 };
 
-ARL.Narrator.prototype.narrate = function (aLine) {
+ARL.Narrator.prototype.narrate = function(aLine) {
     //this.buildMsg();
     this.addLine(aLine);
 };
@@ -56,6 +56,14 @@ ARL.Narrator.prototype.addColorLine = function (nData) {
     aMsg.className = aColor;
     msgPanel.appendChild(aMsg);
     SIG('scrollToNew', msgPanel);
+};
+
+ARL.Narrator.prototype.narrateAction = function(params) {
+    // This is going to be a new routing point where we'll push individual calls through
+    // to functions that will build the narration messages for individual actions
+    let[origAction, theDetails] = params;
+    let theAction = 'narrate' + origAction;
+    SIG(theAction, theDetails);
 };
 
 
