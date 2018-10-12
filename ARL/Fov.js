@@ -629,6 +629,15 @@ ARL.Fov.prototype.updateMobFovOnCurrentFloor = function() {
             curMob.mVision.vInViewLocs = [...newView];
             curMob.mVision.vKnownLocs = [...newKnown];
             
+            // HELLA HACKY HACK FOR FIXING GOBBOS WANDERING INTO PITS
+            // This should make the entire map visible to the player at all times
+            /*
+            if (curMob.mIdentity.iType === 'player') {
+                curMob.mVision.vInViewLocs = [...GCON('PHYS_LOCS')];
+                curMob.mVision.vKnownLocs = [...GCON('PHYS_LOCS')];
+            }
+            */
+            
         }
     }
     

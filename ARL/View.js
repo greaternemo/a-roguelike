@@ -51,6 +51,7 @@ ARL.View.prototype.init = function () {
     
     // then we build our view loop
     SCON('READY_TO_DRAW', true);
+    SCON('DEATH_CAM', false);
     this.viewLoop = new ARL.Loop(function () {
         return SIG('drawPhysMap');
     }, GCON('LOOP_DELAY'));
@@ -101,6 +102,7 @@ ARL.View.prototype.handleCellUpdates = function (params) {
     let targetLoc = params.targetLoc;
     let viewMap = GCON('VIEW_MAP');
     let viewTarget = viewMap[targetLoc];
+    let glyphBase = GCON('GLYPH_BASE');
     
     // We're going to check the state of the physical tile
     // and translate that into the state of the view tile.
@@ -113,11 +115,13 @@ ARL.View.prototype.handleCellUpdates = function (params) {
         viewTarget.vColorFG = 'black';
     }
     else if (targetTile.aVisible === false) {
-        viewTarget.vColorBG = 'lightgray';
-        viewTarget.vColorFG = 'black';
+        viewTarget.vColorBG = 'black';
+        viewTarget.vColorFG = 'darkgray';
     } else {
-        viewTarget.vColorBG = 'khaki';
-        viewTarget.vColorFG = 'black';
+        //viewTarget.vColorBG = 'khaki';
+        //viewTarget.vColorBG = glyphBase[targetTile.aGlyph].gColorBG;
+        viewTarget.vColorBG = glyphBase[GCON('TERRAIN_BASE')[targetTile.aTerrain].tGlyph].gColorBG;
+        viewTarget.vColorFG = glyphBase[targetTile.aGlyph].gColorFG;
     }
     
     // This will need to be significantly refactored later.
