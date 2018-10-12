@@ -61,65 +61,69 @@ ARL.Action.prototype.movePlayerWest = function () {
 
 ARL.Action.prototype.useStairs = function () {};
 
-ARL.Action.prototype.pursueThePlayer = function(aMob) {
+ARL.Action.prototype.pursueThePlayer = function (aMob) {
     // We can do this simply because of the way our basic-ass shadowcasting works:
     // Any mob that can see the player has line of sight and has no obstacles to avoid.
-
-    let[mX, mY] = GET(aMob).mPosition.pLocXY.split(',');
+    
+    let [mX, mY] = GET(aMob).mPosition.pLocXY.split(',');
     mX = parseInt(mX);
     mY = parseInt(mY);
-    let[pX, pY] = GCON('PLAYER_MOB').mPosition.pLocXY.split(',');
+    let [pX, pY] = GCON('PLAYER_MOB').mPosition.pLocXY.split(',');
     pX = parseInt(pX);
     pY = parseInt(pY);
     let walkableDirs = new Set(SIG('findWalkableSides', GET(aMob).mPosition.pLocXY));
     let validDirs = [];
     let moveDir = null;
-
+    
     // We may need to/may be able to pull this out as a utility function later in some form
     if (mY > pY) {
         // north
         if (walkableDirs.has('N')) {
             validDirs.push('N');
         }
-    } else if (mY < pY) {
+    }
+    else if (mY < pY) {
         // south
         if (walkableDirs.has('S')) {
             validDirs.push('S');
         }
-    } else {
+    }
+    else {
         // same y coord, nothing
     }
-
+ 
     if (mX > pX) {
         // west
         if (walkableDirs.has('W')) {
             validDirs.push('W');
         }
-    } else if (mX < pX) {
+    }
+    else if (mX < pX) {
         // east
         if (walkableDirs.has('E')) {
             validDirs.push('E');
         }
-    } else {
+    }
+    else {
         // same x coord, nothing
     }
-
+        
     if (validDirs.length === 1) {
         moveDir = validDirs[0];
         SIG('tryToMoveMobInDir', [aMob, moveDir]);
-    } else if (validDirs.length === 2) {
+    }
+    else if (validDirs.length === 2) {
         moveDir = validDirs[SIG('aCoin')];
         SIG('tryToMoveMobInDir', [aMob, moveDir]);
-    } else if (validDirs.length === 0) {
+    }
+    else if (validDirs.length === 0) {
         SIG('makeMobPassTheTurn');
     }
 };
 
 ARL.Action.prototype.wanderInRandomDir = function (aMob) {
     let mLoc = GET(aMob).mPosition.pLocXY;
-    //let aDir = SIG('findRandomWalkableSide', mLoc);
-    // Random wandering should never result in a mob wandering into a pit
-    let aDir = SIG('findRandomWalkableAndSafeSide', mLoc);
+    let aDir = SIG('findRandomWalkableSide', mLoc);
     SIG('tryToMoveMobInDir', [aMob, aDir]);
 };
 
@@ -127,37 +131,27 @@ ARL.Action.prototype.tryToMoveMobInDir = function (mData) {
     // Is there a wall there? If yes, don't move.
     // Is there a mob there? If yes, hit them and don't move.
     // If it's floor and there's nothing there, move there.
-    let[aMob, aDir] = mData;
+    let [aMob, aDir] = mData;
     let locFrom = GET(aMob).mPosition.pLocXY;
     let locTo = GCON('SIDE_REFS')[locFrom][aDir];
-    if (!locTo) {
+    if (locTo === false) {
         // you can't walk off the map
         return;
     }
     let physLocTo = GCON('PHYS_MAP')[GCON('CURRENT_FLOOR')][locTo];
-    let locTerrain = GCON('TERRAIN_BASE')[physLocTo.aTerrain];
-    if (locTerrain.tWalkable === false) {
+    if (GCON('TERRAIN_BASE')[physLocTo.aTerrain].tWalkable === false) {
         // can't walk there
         // we immediately return to skip the EOT cleanup, which we only do
         // after performing an action with finality
         return;
-    } else if (physLocTo.aBody !== false) {
+    }
+    else if (physLocTo.aBody !== false) {
         // ya gotta fite em
-        // UNLESS THEY'RE YER FRAND
-        if (GET(aMob).mIdentity.iType === GET(physLocTo.aBody).mIdentity.iType) {
-            //let nStr = "The " + GET(aMob).mIdentity.iType + " stumbles into the other ";
-            //nStr += GET(physLocTo.aBody).mIdentity.iType + " and backs away embarrassed.";
-            //SIG('narrate', nStr);
-        } else {
-            SIG('doAHit', [aMob, physLocTo.aBody]);
-        }
-    } else {
-        // Now we have multiple types of walkable terrain, not all good!
+        SIG('doAHit', [aMob, physLocTo.aBody]);
+    }
+    else {
+        // move to the new loc
         SIG('moveMobToLoc', [aMob, locFrom, locTo]);
-        if (locTerrain.tName === 'abyss') {
-            // If you step into the abyss, you die.
-            SIG('stepIntoAbyss', aMob);
-        }
     }
     // if you did a hit or moved, those actions have finality and will trigger
     // the end of the current turn.
@@ -165,10 +159,10 @@ ARL.Action.prototype.tryToMoveMobInDir = function (mData) {
 };
 
 ARL.Action.prototype.moveMobToLoc = function (mData) {
-    let[aMob, locFrom, locTo] = mData;
+    let [aMob, locFrom, locTo] = mData;
     let physLocFrom = GCON('PHYS_MAP')[GCON('CURRENT_FLOOR')][locFrom];
     let physLocTo = GCON('PHYS_MAP')[GCON('CURRENT_FLOOR')][locTo];
-
+    
     // update anything that needs to be updated, then signal those updates
     GET(aMob).mPosition.pLocXY = locTo;
     physLocFrom.aBody = false;
@@ -176,23 +170,13 @@ ARL.Action.prototype.moveMobToLoc = function (mData) {
     SIG('handleTileUpdates', [locFrom, locTo]);
 };
 
-ARL.Action.prototype.doARangedAttackInDir = function () {
-    // yo what's up
-    
-};
-
 ARL.Action.prototype.doARangedAttackTowardCursor = function () {
     // If the player selects themselves, fuck off, eh
     if (GCON('CURSOR_LOC') === GCON('PLAYER_MOB').mPosition.pLocXY) {
         SIG('narrate', 'You fire an arrow into the floor at your feet. Wasteful.');
-    } else {
+    }
+    else {
         // This is going to be really fucking rigid but it's gonna work for now
-        // OK TIME TO FIX THIS BULLSHIT
-        
-        // Ok so this stuff doesn't change, this is basically 'calculateCursorDir'
-        // and as an action, it IS player-specific.
-        // For a non-player mob, we'll have a different calculation to determine
-        // their firing direction based on where they are in relation to the target.
         let playerLoc = GCON('PLAYER_MOB').mPosition.pLocXY;
         let playerRange = GCON('PLAYER_MOB').mVision.vFov;
         let sideRefs = GCON('SIDE_REFS');
@@ -236,7 +220,8 @@ ARL.Action.prototype.doARangedAttackTowardCursor = function () {
                     break;
                 }
                 // if we can fire through this tile and there's no one here to hit, we just keep looking
-            } else {
+            }
+            else {
                 // we can't fire through this tile, so we just hit it and whiff
                 fireStr = 'You fire an arrow right into the ' + GCON('TERRAIN_BASE')[curFloor[thisLoc].aTerrain].tName;
                 fireStr += ' and watch it break.';
@@ -251,12 +236,13 @@ ARL.Action.prototype.doARangedAttackTowardCursor = function () {
 };
 
 ARL.Action.prototype.doAHit = function (fMobs) {
-    let[aMob, aVic] = fMobs;
+    let [aMob, aVic] = fMobs;
     let hitDamage = GET(aMob).mState.sStrTotal - GET(aVic).mState.sDefTotal;
     if (hitDamage > 0) {
         // note the mob as the last damage source, TODO
         SIG('changeMobHPCur', [aVic, 0 - hitDamage]);
-    } else {
+    }
+    else {
         // mob whiffs, narrate it
     }
     // do aMob.mStats.sStr - aVic.mStats.sDef
@@ -264,7 +250,7 @@ ARL.Action.prototype.doAHit = function (fMobs) {
 };
 
 ARL.Action.prototype.changeMobHPCur = function (mData) {
-    let[aMob, aVal] = mData;
+    let [aMob, aVal] = mData;
     SIG('changeMobState', [aMob, 'sHPCur', aVal]);
     // then do a death check on the mob
     // this may/will eventually need refactoring to include cause of death
@@ -272,7 +258,7 @@ ARL.Action.prototype.changeMobHPCur = function (mData) {
 };
 
 ARL.Action.prototype.changeMobState = function (sData) {
-    let[aMob, aStat, aVal] = sData;
+    let [aMob, aStat, aVal] = sData;
     GET(aMob).mState[aStat] += aVal;
     if (GET(aMob).mState[aStat] < 0) {
         GET(aMob).mState[aStat] = 0;
@@ -280,29 +266,19 @@ ARL.Action.prototype.changeMobState = function (sData) {
 };
 
 ARL.Action.prototype.changeMobStats = function (sData) {
-    let[aMob, aStat, aVal] = sData;
+    let [aMob, aStat, aVal] = sData;
     GET(aMob).mStats[aStat] += aVal;
     if (GET(aMob).mStats[aStat] < 0) {
         GET(aMob).mStats[aStat] = 0;
     }
 };
 
-ARL.Action.prototype.stepIntoAbyss = function (aMob) {
-    let dStr = 'The ' + GET(aMob).mIdentity.iType + ' falls into the abyss!';
-    SIG('narrate', dStr);
-    SIG('killMob', aMob);
-};
-
 ARL.Action.prototype.wasMobKilled = function (aMob) {
     if (GET(aMob).mState.sHPCur === 0) {
-        SIG('killMob', aMob);
+        let dStr = 'The ' + GET(aMob).mIdentity.iType + ' dies!';
+        SIG('narrate', dStr);
+        SIG('mobDeath', aMob);
     }
-};
-
-ARL.Action.prototype.killMob = function (aMob) {
-    let dStr = 'The ' + GET(aMob).mIdentity.iType + ' dies!';
-    SIG('narrate', dStr);
-    SIG('mobDeath', aMob);
 };
 
 

@@ -5,10 +5,7 @@ ARL.BASE = {
 
     RefData: {
 
-        // 30 fps gets really bogged down with multiple mobs, let's try faster
-        // loopDelay: (1000/30),
-        // loopDelay: (1000/60),
-        loopDelay: (1000/120),
+        loopDelay: (1000/30),
         
         // Flags
         listenNumpad: true,
@@ -175,36 +172,9 @@ ARL.BASE = {
             },
         },
         
-        glyphBase: {
-            '@': {
-                gColorBG: 'transparent',
-                gColorFG: 'skyblue',
-            },
-            'g': {
-                gColorBG: 'transparent',
-                //gColorFG: 'darkolivegreen',
-                gColorFG: 'chartreuse',
-            },
-            '.': {
-                gColorBG: 'black',
-                gColorFG: 'sienna',
-            },
-            '#': {
-                gColorBG: 'slategray',
-                gColorFG: 'black',
-            },
-            '\u2056': {
-                //gColorBG: 'darkslategray',
-                //gColorFG: 'darkslategray',
-                gColorBG: '#222222',
-                gColorFG: '#666666',
-            },
-        },
-        
         terrainList: [
             'floor',
             'wall',
-            'abyss',
             'uStairs',
             'dStairs',
         ],
@@ -224,14 +194,6 @@ ARL.BASE = {
                 tSeeThru: false,
                 tWalkable: false,
             },
-            abyss: {
-                tGlyph: '\u2056',
-                tName: 'abyss',
-                tFireThru: true,
-                tSeeThru: true,
-                tWalkable: true,
-            },
-            // stairs are unimplemented
             uStairs: {
                 tGlyph: '<',
                 tName: 'stairs',
@@ -239,7 +201,6 @@ ARL.BASE = {
                 tSeeThru: true,
                 tWalkable: true,
             },
-            // stairs are unimplemented
             dStairs: {
                 tGlyph: '>',
                 tName: 'stairs',
@@ -270,7 +231,7 @@ ARL.BASE = {
 
         floorList: [
             'floor1',
-            //'floor2',
+            'floor2',
         ],
 
         floorBase: {
@@ -334,560 +295,106 @@ ARL.BASE = {
             ],
             nodeLayouts: {
                 '000A': [
-                    [
-                        "....",
-                        "....",
-                        "....",
-                        "....",
-                    ],
-                    [
-                        "....",
-                        ".##.",
-                        ".##.",
-                        "....",
-                    ],
-                    [
-                        "#...",
-                        ".##.",
-                        "....",
-                        "#..#",
-                    ],
-                    [
-                        "...#",
-                        ".#..",
-                        ".#..",
-                        "#..#",
-                    ],
-                    [
-                        "#..#",
-                        "....",
-                        ".##.",
-                        "...#",
-                    ],
-                    [
-                        "#..#",
-                        "..#.",
-                        "..#.",
-                        "#...",
-                    ],
-                    [
-                        "#..#",
-                        "....",
-                        ".#..",
-                        "...#",
-                    ],
-                    [
-                        "...#",
-                        ".#..",
-                        "....",
-                        "#..#",
-                    ],
-                    [
-                        "#...",
-                        "..#.",
-                        "....",
-                        "#..#",
-                    ],
-                    [
-                        "#..#",
-                        "....",
-                        "..#.",
-                        "#...",
-                    ],
+                    "....",
+                    "....",
+                    "....",
+                    "....",
                 ],
                 '0000': [
-                    [
-                        "#..#",
-                        "....",
-                        "....",
-                        "#..#",
-                    ],
-                    [
-                        "....",
-                        "....",
-                        "....",
-                        "....",
-                    ],
-                    [
-                        "#..#",
-                        ".#..",
-                        "....",
-                        "#...",
-                    ],
-                    [
-                        "#..#",
-                        "..#.",
-                        "....",
-                        "...#",
-                    ],
-                    [
-                        "...#",
-                        "....",
-                        "..#.",
-                        "#..#",
-                    ],
-                    [
-                        "#...",
-                        "....",
-                        ".#..",
-                        "#..#",
-                    ],
+                    "#..#",
+                    "....",
+                    "....",
+                    "#..#",
                 ],
                 '0001': [
-                    [
-                        "#..#",
-                        "#...",
-                        "#...",
-                        "#..#",
-                    ],
-                    [
-                        "#..#",
-                        "##..",
-                        "##..",
-                        "#..#",
-                    ],
-                    [
-                        "#...",
-                        "#.#.",
-                        "#.#.",
-                        "#...",
-                    ],
-                    [
-                        "#...",
-                        "###.",
-                        "###.",
-                        "#...",
-                    ],
-                    [
-                        "#...",
-                        "#...",
-                        "#...",
-                        "#...",
-                    ],
-                    [
-                        "#..#",
-                        "#...",
-                        "#.#.",
-                        "#..#",
-                    ],
-                    [
-                        "#..#",
-                        "#.#.",
-                        "#...",
-                        "#..#",
-                    ],
+                    "#..#",
+                    "#...",
+                    "#...",
+                    "#..#",
                 ],
                 '0010': [
-                    [
-                        "#..#",
-                        "....",
-                        "....",
-                        "####",
-                    ],
-                    [
-                        "#..#",
-                        "....",
-                        ".##.",
-                        "####",
-                    ],
-                    [
-                        "....",
-                        ".##.",
-                        "....",
-                        "####",
-                    ],
-                    [
-                        "....",
-                        ".##.",
-                        ".##.",
-                        "####",
-                    ],
-                    [
-                        "....",
-                        "....",
-                        "....",
-                        "####",
-                    ],
-                    [
-                        "#..#",
-                        "..#.",
-                        "....",
-                        "####",
-                    ],
-                    [
-                        "#..#",
-                        ".#..",
-                        "....",
-                        "####",
-                    ],
+                    "#..#",
+                    "....",
+                    "....",
+                    "####",
                 ],
                 '0011': [
-                    [
-                        "#..#",
-                        "#...",
-                        "#...",
-                        "####",
-                    ],
-                    [
-                        "#..#",
-                        "#.#.",
-                        "#...",
-                        "####",
-                    ],
-                    [
-                        "#...",
-                        "#...",
-                        "#...",
-                        "####",
-                    ],
-                    [
-                        "#..#",
-                        "##..",
-                        "###.",
-                        "####",
-                    ],
-                    [
-                        "#...",
-                        "##..",
-                        "###.",
-                        "####",
-                    ],
-                    [
-                        "#...",
-                        "#.#.",
-                        "#...",
-                        "####",
-                    ],
+                    "#..#",
+                    "#...",
+                    "#...",
+                    "####",
                 ],
                 '0100': [
-                    [
-                        "#..#",
-                        "...#",
-                        "...#",
-                        "#..#",
-                    ],
-                    [
-                        "#..#",
-                        "..##",
-                        "..##",
-                        "#..#",
-                    ],
-                    [
-                        "...#",
-                        ".#.#",
-                        ".#.#",
-                        "...#",
-                    ],
-                    [
-                        "...#",
-                        ".###",
-                        ".###",
-                        "...#",
-                    ],
-                    [
-                        "...#",
-                        "...#",
-                        "...#",
-                        "...#",
-                    ],
-                    [
-                        "#..#",
-                        ".#.#",
-                        "...#",
-                        "#..#",
-                    ],
-                    [
-                        "#..#",
-                        "...#",
-                        ".#.#",
-                        "#..#",
-                    ],
+                    "#..#",
+                    "...#",
+                    "...#",
+                    "#..#",
                 ],
                 '0101': [
-                    [
-                        "#..#",
-                        "#..#",
-                        "#..#",
-                        "#..#",
-                    ],
-                    [
-                        "#..#",
-                        "#.##",
-                        "#.##",
-                        "#..#",
-                    ],
-                    [
-                        "#..#",
-                        "##.#",
-                        "##.#",
-                        "#..#",
-                    ],
-                    [
-                        "#..#",
-                        "##.#",
-                        "#..#",
-                        "#..#",
-                    ],
-                    [
-                        "#..#",
-                        "#..#",
-                        "##.#",
-                        "#..#",
-                    ],
-                    [
-                        "#..#",
-                        "#..#",
-                        "#.##",
-                        "#..#",
-                    ],
-                    [
-                        "#..#",
-                        "#.##",
-                        "#..#",
-                        "#..#",
-                    ],
+                    "#..#",
+                    "#..#",
+                    "#..#",
+                    "#..#",
                 ],
                 '0110': [
-                    [
-                        "#..#",
-                        "...#",
-                        "...#",
-                        "####",
-                    ],
-                    [
-                        "#..#",
-                        ".#.#",
-                        "...#",
-                        "####",
-                    ],
-                    [
-                        "...#",
-                        "...#",
-                        "...#",
-                        "####",
-                    ],
-                    [
-                        "#..#",
-                        "..##",
-                        ".###",
-                        "####",
-                    ],
-                    [
-                        "...#",
-                        "..##",
-                        ".###",
-                        "####",
-                    ],
-                    [
-                        "...#",
-                        ".#.#",
-                        "...#",
-                        "####",
-                    ],
+                    "#..#",
+                    "...#",
+                    "...#",
+                    "####",
                 ],
                 '0111': [
-                    [
-                        "#..#",
-                        "#..#",
-                        "#..#",
-                        "####",
-                    ],
+                    "#..#",
+                    "#..#",
+                    "#..#",
+                    "####",
                 ],
                 '1000': [
-                    [
-                        "####",
-                        "....",
-                        "....",
-                        "#..#",
-                    ],
-                    [
-                        "####",
-                        ".##.",
-                        "....",
-                        "#..#",
-                    ],
-                    [
-                        "####",
-                        "....",
-                        ".##.",
-                        "....",
-                    ],
-                    [
-                        "####",
-                        ".##.",
-                        ".##.",
-                        "....",
-                    ],
-                    [
-                        "####",
-                        "....",
-                        "....",
-                        "....",
-                    ],
-                    [
-                        "####",
-                        "....",
-                        ".#..",
-                        "#..#",
-                    ],
-                    [
-                        "####",
-                        "....",
-                        "..#.",
-                        "#..#",
-                    ],
+                    "####",
+                    "....",
+                    "....",
+                    "#..#",
                 ],
                 '1001': [
-                    [
-                        "####",
-                        "#...",
-                        "#...",
-                        "#..#",
-                    ],
-                    [
-                        "####",
-                        "#...",
-                        "#.#.",
-                        "#..#",
-                    ],
-                    [
-                        "####",
-                        "#...",
-                        "#...",
-                        "#...",
-                    ],
-                    [
-                        "####",
-                        "###.",
-                        "##..",
-                        "#..#",
-                    ],
-                    [
-                        "####",
-                        "###.",
-                        "##..",
-                        "#...",
-                    ],
-                    [
-                        "####",
-                        "#...",
-                        "#.#.",
-                        "#...",
-                    ],
+                    "####",
+                    "#...",
+                    "#...",
+                    "#..#",
                 ],
                 '1010': [
-                    [
-                        "####",
-                        "....",
-                        "....",
-                        "####",
-                    ],
-                    [
-                        "####",
-                        ".##.",
-                        "....",
-                        "####",
-                    ],
-                    [
-                        "####",
-                        "....",
-                        ".##.",
-                        "####",
-                    ],
-                    [
-                        "####",
-                        ".#..",
-                        "....",
-                        "####",
-                    ],
-                    [
-                        "####",
-                        "..#.",
-                        "....",
-                        "####",
-                    ],
-                    [
-                        "####",
-                        "....",
-                        "..#.",
-                        "####",
-                    ],
-                    [
-                        "####",
-                        "....",
-                        ".#..",
-                        "####",
-                    ],
+                    "####",
+                    "....",
+                    "....",
+                    "####",
                 ],
                 '1011': [
-                    [
-                        "####",
-                        "#...",
-                        "#...",
-                        "####",
-                    ],
+                    "####",
+                    "#...",
+                    "#...",
+                    "####",
                 ],
                 '1100': [
-                    [
-                        "####",
-                        "...#",
-                        "...#",
-                        "#..#",
-                    ],
-                    [
-                        "####",
-                        "...#",
-                        ".#.#",
-                        "#..#",
-                    ],
-                    [
-                        "####",
-                        "...#",
-                        "...#",
-                        "...#",
-                    ],
-                    [
-                        "####",
-                        ".###",
-                        "..##",
-                        "#..#",
-                    ],
-                    [
-                        "####",
-                        ".###",
-                        "..##",
-                        "...#",
-                    ],
-                    [
-                        "####",
-                        "...#",
-                        ".#.#",
-                        "...#",
-                    ],
+                    "####",
+                    "...#",
+                    "...#",
+                    "#..#",
                 ],
                 '1101': [
-                    [
-                        "####",
-                        "#..#",
-                        "#..#",
-                        "#..#",
-                    ],
+                    "####",
+                    "#..#",
+                    "#..#",
+                    "#..#",
                 ],
                 '1110': [
-                    [
-                        "####",
-                        "...#",
-                        "...#",
-                        "####",
-                    ],
+                    "####",
+                    "...#",
+                    "...#",
+                    "####",
                 ],
                 '1111': [
-                    [
-                        "####",
-                        "####",
-                        "####",
-                        "####",
-                    ],
+                    "####",
+                    "####",
+                    "####",
+                    "####",
                 ],
             },
             layoutTypes: [
@@ -895,7 +402,6 @@ ARL.BASE = {
                 'ends',
                 'corners',
                 'junctions',
-                'special',
             ],
             layouts: {
                 corridors: [
@@ -920,24 +426,12 @@ ARL.BASE = {
                     "0010",
                     "0001",
                 ],
-                special: [
-                    "0000",
-                ],
             },
             transitions: {
                 corridors: ["corridors", "corners", "ends", "junctions"],
                 ends: ["corridors", "corners", "junctions"],
                 corners: ["corridors", "corners", "junctions", "ends"],
                 junctions: ["corridors", "corners", "ends"],
-                // We created the special type as a panic mirror of junctions so that normal
-                // junction placement rules will hold unless a situation arises wherein the only
-                // valid layout is a junction that would connect to another junction.
-                // The neat thing about it is that if you have two adjacent spaces that can only
-                // be invalid junctions, one will be calculated as invalid and added as a special
-                // layout, and then the adjacent one will be calculated as invalid and will also
-                // be added as a special layout. It's a solution that can lead to another instance
-                // of the same failure that it can recursively solve through its own exception.
-                special: ["corridors", "corners", "ends"],
             },
         },
     },
@@ -966,9 +460,7 @@ ARL.BASE = {
                 'changeMobHPCur',
                 'changeMobState',
                 'changeMobStats',
-                'stepIntoAbyss',
                 'wasMobKilled',
-                'killMob',
         ],
         Agent: [
                 'compelMob',
@@ -1027,7 +519,6 @@ ARL.BASE = {
                 'getMapgenLayout',
                 'generateRandomNodeLayout',
                 'convertNodeLayoutToSingleArray',
-                'finalizeVariableLayout',
                 'remapNodeLayoutToNodeMap',
                 'expandLayoutMapNodes',
                 'mapLayoutMapToFinishedLayout',
@@ -1041,7 +532,6 @@ ARL.BASE = {
                 'lineBreak',
                 'addLine',
                 'addColorLine',
-                'narrateAction',
         ],
         Registry: [
                 'getEid',
@@ -1085,7 +575,6 @@ ARL.BASE = {
                 'getCrossForLoc',
                 'getSquareForLoc',
                 'getInlineLocsInDir',
-                'getDirBetweenTwoLocs',
                 'fracSum',
                 'fracDiff',
                 'fracGreaterOf',
@@ -1121,11 +610,8 @@ ARL.BASE = {
                 'populateFirstFloor',
                 'populateFloor',
                 'findAWalkableTile',
-                'findRandomWalkableAndSafeSide',
                 'findRandomWalkableSide',
-                'findWalkableAndSafeSides',
                 'findWalkableSides',
-                'isSideWalkableAndSafe',
                 'isSideWalkable',
                 'generatePlayer',
                 'generateMobs',
@@ -1176,7 +662,6 @@ ARL.BASE = {
                 'DIRTY_LOCS',       // rw, array, view locs that need to be redrawn
                 'DIRTY_LOAD',       // rw, array, view locs that need to be redrawn
                 'READY_TO_DRAW',    // rw, bool, is the map ready to attempt a redraw
-                'DEATH_CAM',        // rw, bool, if the player is dead, has the whole map been revealed
                 'CURSOR_LOC',       // rw, string, view loc that currently has the cursor on it for targeting
 
                 'CURRENT_FLOOR',    // rw, string, name of the floor the player is on
@@ -1189,8 +674,6 @@ ARL.BASE = {
                 'LAYOUT_MAP',       // rw, table, contains floor layout data as it's being built
 
                 'MAPGEN_BASE',      // ro, table, tables of map generation data
-                
-                'GLYPH_BASE',       // ro, table, tables of glyph appearance data for the view
 
                 'TERRAIN_LIST',     // ro, array, terrain types as strings
                 'TERRAIN_BASE',     // ro, table, tables of terrain data, keyed by terrain name
@@ -1267,8 +750,6 @@ ARL.BASE = {
         LAYOUT_BASE:    'layoutBase',
 
         MAPGEN_BASE:    'mapgenBase',
-        
-        GLYPH_BASE:     'glyphBase',
 
         TERRAIN_LIST:   'terrainList',
         TERRAIN_BASE:   'terrainBase',

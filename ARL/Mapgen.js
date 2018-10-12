@@ -69,20 +69,19 @@ ARL.Mapgen.prototype.getValidNodeSides = function (params) {
     let locSides = null;
     let aSide = null;
     let layoutMap = GCON('LAYOUT_MAP');
+    //let layoutMap = GCON
     //console.log("GRID_MAP[aLoc]: " + GRID_MAP[aLoc]);
-    //console.log(layoutMap);
-    //console.log(">>>>> getValidNodeSides <<<<<");
+    //console.log(GRID_MAP);
 
     allDirs = GCON('ALL_DIRS').slice();
     locSides = SIG('getNodeSides', [aLoc, gridSideRefs]);
     while (allDirs.length) {
         aSide = allDirs.shift();
-        //console.log("> aSide: " + aSide);
         //console.log("A: locSides[aSide]: " + locSides[aSide]);
         if (locSides[aSide]) {
-            //console.log("A=1, B: trying to check node side - layoutMap[locSides[aSide]]: " + layoutMap[locSides[aSide]]);
+            //console.log("B: GRID_MAP[locSides[aSide]]: " + GRID_MAP[locSides[aSide]]);
             if (layoutMap[locSides[aSide]]) {
-                //console.log("B=1, C: trying to compare sides - layoutMap[aLoc]: " + layoutMap[aLoc]);
+                //console.log("C: trying to compare sides");
                 if (SIG('compareNodeSides', [layoutMap[aLoc], layoutMap[locSides[aSide]], aSide])) {
                     //finalSides[aSide] = 'open';
                     finalSides.push(aSide);
@@ -90,14 +89,12 @@ ARL.Mapgen.prototype.getValidNodeSides = function (params) {
                     //finalSides[aSide] = 'wall';
                 }
             } else {
-                //console.log("B=0, D: trying to see if side is open - layoutMap[aLoc]: " + layoutMap[aLoc]);
-                if (layoutMap[aLoc] && SIG('isNodeLayoutSideOpen', [layoutMap[aLoc], aSide])) {
+                if (SIG('isNodeLayoutSideOpen', [layoutMap[aLoc], aSide])) {
                     //finalSides[aSide] = 'none';
                     finalSides.push(aSide);
                 }
             }
         } else {
-            //console.log("A=0, welp");
             //finalSides[aSide] = 'off';
         }
     }
@@ -193,49 +190,6 @@ ARL.Mapgen.prototype.getValidNodeLayouts = function (params) {
     }
 
     //console.log("returning validated for " + aLoc + ": " + validated);
-    
-    // This WILL break map generation if a condition arises wherein no valid layouts are returned.
-    if (validated.length < 1) {
-        // First we'll see if there's a natural fit for the place.
-        let panicLayout = '';
-        let panicDirs = [...GCON('ALL_DIRS')];
-        let pDir = null;
-        while (panicDirs.length > 0) {
-            pDir = panicDirs.shift();
-            switch (validSides[pDir]) {
-                case 'wall':
-                    panicLayout += '1';
-                    break;
-                case 'off':
-                    panicLayout += '1';
-                    break;
-                case 'open':
-                    panicLayout += '0';
-                    break;
-                case 'none':
-                    // why the hell not
-                    panicLayout += '0';
-                    break;
-                default:
-                    console.log("Something is wrong in the map generation.");
-                    console.log("validSides for " + aLoc + ":");
-                    console.log(validSides);
-            }
-        }
-        if (panicLayout.split('').length === 4) {
-            // WHEW
-            // Dodged a bullet there
-            console.log('Built ourselves into an invalid layout, calculated ' + panicLayout + ' as the only valid layout.');
-            validated.push(panicLayout);
-        }
-        else {
-            // PANIC
-            // And by 'PANIC' I mean just throw in a wide open layout
-            console.log('Panicked during mapgen, used a wide open special layout');
-            validated.push('0000');
-        }
-    }
-    
     return validated;
 };
 
@@ -245,7 +199,7 @@ ARL.Mapgen.prototype.getMapgenLayout = function (aLayout) {
     let lName = null;
     while (layoutNames.length) {
         lName = layoutNames.shift();
-        if (GCON('MAPGEN_BASE').layouts[lName].indexOf(aLayout) !== -1) {
+        if (GCON('MAPGEN_BASE').layouts[lName].indexOf(aLayout) != -1) {
             return lName;
         }
     }
@@ -266,46 +220,22 @@ ARL.Mapgen.prototype.convertNodeLayoutToSingleArray = function (layoutArr) {
     return layoutArr.slice().join('').split('');
 };
 
-ARL.Mapgen.prototype.finalizeVariableLayout = function (baseLayout) {
-    // Right now we're just gonna mess with the walls. Simple.
-    let finalLayout = [];
-    let curGlyph = '';
-    while (baseLayout.length > 0) {
-        curGlyph = baseLayout.shift();
-        if (curGlyph === '#') {
-            // We'll say there's a 1 in 4 chance that a wall bill be a pit. Sure.
-            if (SIG('d4') === 1) {
-                curGlyph = '\u2056';
-            }
-        }
-        finalLayout.push(curGlyph);
-    }
-    return finalLayout;
-};
-
 // updated, should be good
 ARL.Mapgen.prototype.remapNodeLayoutToNodeMap = function (params) {
     let [nodeStr, layoutBase] = params;
     let mapgenBase = GCON('MAPGEN_BASE');
-    let randLayout = SIG('randFromArray', mapgenBase.nodeLayouts[nodeStr]);
-    let baseLayout = SIG('convertNodeLayoutToSingleArray', randLayout);
+    let baseLayout = SIG('convertNodeLayoutToSingleArray', mapgenBase.nodeLayouts[nodeStr]);
 
-    // Ok, this is that new shit.
-    // We're passing in an array of 16 strings here, our 4x4 node 'tile' for mapgen
-    // We need to pick up on key chars here to determine how to finalize the layout
-    // Then we need to pass back an array as if nothing happened.
-    let finalLayout = SIG('finalizeVariableLayout', baseLayout);
-    
     let nodeLocs = layoutBase.nodeLocs.slice();
-    if (finalLayout.length != nodeLocs.length) {
-        console.log("finalLayout length != nodeLocs length");
+    if (baseLayout.length != nodeLocs.length) {
+        console.log("baseLayout length != nodeLocs length");
     }
 
     let nodeMap = {};
     let aGlyph = null;
     let aLoc = null;
     while (nodeLocs.length) {
-        aGlyph = finalLayout.shift();
+        aGlyph = baseLayout.shift();
         aLoc = nodeLocs.shift();
         nodeMap[aLoc] = aGlyph;
     }
@@ -460,15 +390,13 @@ ARL.Mapgen.prototype.generateFloorLayout = function (layoutType) {
     while (sideDirs.length) {
         sDir = sideDirs.shift();
         sLoc = gridSideRefs[originLoc][sDir];
-        if (Object.keys(allNodes).indexOf(sLoc) === -1) {
-            allNodes[sLoc] = {};
-            allNodes[sLoc].layout = null;
-            allNodes[sLoc].lasts = [];
-            allNodes[sLoc].lasts.push(originLoc);
-        }
-        if (nodePath.indexOf(sLoc) === -1) {
-            nodePath.push(sLoc);
-        }
+        allNodes[sLoc] = {};
+        allNodes[sLoc].layout = null;
+        allNodes[sLoc].lasts = [];
+        // later on, this should be wrapped in a conditional that tests against indexOf
+        allNodes[sLoc].lasts.push(originLoc);
+        // so should this
+        nodePath.push(sLoc);
     }
     while (nodePath.length) {
         // move to the next loc in the array
@@ -477,7 +405,7 @@ ARL.Mapgen.prototype.generateFloorLayout = function (layoutType) {
         aLasts = allNodes[nextLoc].lasts.slice();
         while (aLasts.length) {
             aLast = aLasts.shift();
-            if (usedNodes.indexOf(aLast) !== -1) {
+            if (usedNodes.indexOf(aLast) != -1) {
                 lastLoc = aLast;
                 aLasts = [];
             }

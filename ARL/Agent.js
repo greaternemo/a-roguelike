@@ -21,16 +21,6 @@ ARL.Agent.prototype.compelMob = function (aMob) {
         case 'gobbo':
             SIG('compelGobbo', aMob);
             break;
-        case 'archer':
-            SIG('compelArcher'. aMob);
-            break;
-        case 'brawler':
-            SIG('compelBrawler', aMob);
-            break;
-        default:
-            // failsafe, I guess
-            console.log('Failed to compel mob ' + aMob + ' with agent ' + GET(aMob).mIdentity.iAgent);
-            SIG('endCurrentTurn');
     }
 };
 
@@ -40,46 +30,7 @@ ARL.Agent.prototype.compelPlayer = function () {
     SCON('PLAYER_TURN', true);
 };
 
-// Refactoring this as compelBrawler
 ARL.Agent.prototype.compelGobbo = function (aMob) {
-    if (!GCON('GAME_OVER')) {
-        if (SIG('canSeeThePlayer', aMob)) {
-            SIG('pursueThePlayer', aMob);
-        }
-        else {
-            SIG('wanderInRandomDir', aMob);
-        }
-    }
-    else {
-        SIG('wanderInRandomDir', aMob);
-    }
-};
-
-// pretty sure all non-player mob AI should be in the form:
-// if (!GCON('GAME_OVER')) { anything that requires the player to be alive }
-// else { SIG('wanderInRandomDir', aMob); }
-
-ARL.Agent.prototype.compelArcher = function (aMob) {
-    if (!GCON('GAME_OVER')) {
-        if (GET(aMob).mActionState.asCur === 'drawn') {
-            if (SIG('canSeeThePlayer', aMob)) {
-                SIG('pursueThePlayer', aMob);
-            }
-            else {
-                SIG('wanderInRandomDir', aMob);
-            }
-        }
-        else if (SIG('canSeeThePlayer', aMob)) {
-            
-        }
-    }
-    else {
-        SIG('wanderInRandomDir', aMob);
-    }
-};
-
-// this stays unchanged from compelGobbo
-ARL.Agent.prototype.compelBrawler = function (aMob) {
     if (!GCON('GAME_OVER')) {
         if (SIG('canSeeThePlayer', aMob)) {
             SIG('pursueThePlayer', aMob);
