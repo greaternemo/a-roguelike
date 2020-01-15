@@ -33,6 +33,7 @@ ARL.Turner.prototype.whoseTurnIsIt = function () {
         cFloor.fLastMob = cFloor.fMobs[mIdxA];
         cFloor.fCurMob = cFloor.fMobs[mIdxB];
     }
+    console.log('current turn: ' + GET(cFloor.fCurMob).mIdentity.iType);
 };
 
 // shit that was easy, pffffft

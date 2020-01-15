@@ -17,9 +17,12 @@ ARL.View.prototype.init = function () {
     let curLoc = null;
     let curLocXY = null;
     let mapCanvas = SIG('byId', 'map_canvas');
+    // the color here should never be seen, it's just for the initial draw
     mapCanvas.getContext('2d').fillStyle = 'lightgreen';
     mapCanvas.getContext('2d').fillRect(0, 0, mapCanvas.width, mapCanvas.height);
     
+    // we'll do a little prep here that just needs to be done
+    SCON('TARGETED_LOCS', new Map());
     
     // so first we create the VIEW_MAP
     while (viewLocs.length > 0) {
@@ -33,13 +36,13 @@ ARL.View.prototype.init = function () {
             },
             vGlyph: '#',
             // false should be default, enabled true for testing
-            // vKnown: true,
-            vKnown: false,
+            vKnown: true,
+            // vKnown: false,
             // vVisible: false,
             vCursor: false,
             vColorFG: 'lightgray',
             // vColorBG: '#384148',
-            vColorBG: 'black',
+            vColorBG: 'darkslategray',
         };
     }
     SCON('VIEW_MAP', viewMap);
@@ -111,12 +114,16 @@ ARL.View.prototype.handleCellUpdates = function (params) {
     
     // If we don't know what the tile even is, we straight up BAIL
     if (viewTarget.vKnown === false) {
-        viewTarget.vColorBG = 'black';
-        viewTarget.vColorFG = 'black';
+        //viewTarget.vColorBG = 'black';
+        //viewTarget.vColorFG = 'black';
+        viewTarget.vColorBG = glyphBase.unknown.gColorBG;
+        viewTarget.vColorFG = glyphBase.unknown.gColorFG;
     }
     else if (targetTile.aVisible === false) {
-        viewTarget.vColorBG = 'black';
-        viewTarget.vColorFG = 'darkgray';
+        //viewTarget.vColorBG = 'black';
+        //viewTarget.vColorFG = 'darkgray';
+        viewTarget.vColorBG = glyphBase.unvisible.gColorBG;
+        viewTarget.vColorFG = glyphBase.unvisible.gColorFG;
     } else {
         //viewTarget.vColorBG = 'khaki';
         //viewTarget.vColorBG = glyphBase[targetTile.aGlyph].gColorBG;
@@ -151,7 +158,7 @@ ARL.View.prototype.drawTileToMap = function (params) {
     textOrigin.oY = (viewBase.cellSize.cHeight * locY) + viewBase.cellSize.cHeight;
     
     // We always wipe the zone before redrawing.
-    targetMap.fillStyle = 'black';
+    targetMap.fillStyle = viewBase.mapStyle.mFillColor;
     targetMap.fillRect(
         drawOrigin.oX, 
         drawOrigin.oY, 
@@ -170,8 +177,9 @@ ARL.View.prototype.drawTileToMap = function (params) {
     
     // We only fill the FG color and text if the tile is known
     if (targetTile.vKnown === true) {
-        targetMap.font = '16px monospace';
-        targetMap.textBaseline = 'bottom';
+        //targetMap.font = '16px monospace';
+        targetMap.font = viewBase.mapStyle.mFont;
+        targetMap.textBaseline = viewBase.mapStyle.mTextBaseline;
         targetMap.fillStyle = targetTile.vColorFG;
         targetMap.fillText(
             targetTile.vGlyph,
@@ -180,10 +188,28 @@ ARL.View.prototype.drawTileToMap = function (params) {
         );
     }
     
+    // If a non-player mob is aiming at a space, we draw that indicator
+    let targetedLocs = GCON('TARGETED_LOCS').values();
+    let curState = targetedLocs.next();
+    while (curState.done !== true) {
+        if (curState.value === targetLoc) {
+            targetMap.lineWidth = viewBase.targetStyle.cLineWidth;
+            targetMap.strokeStyle = viewBase.targetStyle.cColor;
+            targetMap.strokeRect(
+                drawOrigin.oX,
+                drawOrigin.oY,
+                viewBase.cellSize.cWidth,
+                viewBase.cellSize.cHeight,
+            );
+        }
+        curState = targetedLocs.next();
+    }
+    
+    
     // We only draw the 'cursor' if it's there and always last if it is
     if (targetTile.vCursor === true) {
-        targetMap.lineWidth = 2;
-        targetMap.strokeStyle = 'limegreen';
+        targetMap.lineWidth = viewBase.cursorStyle.cLineWidth;
+        targetMap.strokeStyle = viewBase.cursorStyle.cColor;
         targetMap.strokeRect(
             drawOrigin.oX,
             drawOrigin.oY,
@@ -193,6 +219,7 @@ ARL.View.prototype.drawTileToMap = function (params) {
     }
     
     // This will also need refactoring later to use more config data and less hard-coding.
+    // Done, 1/10/20
 };
 
 ARL.View.prototype.addToDirtyLoad = function (params) {
@@ -269,6 +296,23 @@ ARL.View.prototype.moveCursorToLoc = function (aLoc) {
     SIG('delCursorAtLoc', oldLoc);
     SIG('addCursorAtLoc', aLoc);
 };
+
+ARL.View.prototype.addTargetingAtLoc = function (params) {
+    let [aMob, aLoc] = params;
+    GCON('TARGETED_LOCS').set(aMob, aLoc);
+    SIG('addToDirtyLoad', [aLoc]);
+    console.log(GCON('TARGETED_LOCS'));
+};
+
+// I know the name of this one doesn't exactly reflect the args it wants
+// but I'm doing my best and I have a headache
+ARL.View.prototype.delTargetingAtLoc = function (aMob) {
+    GCON('TARGETED_LOCS').delete(aMob);
+};
+
+ARL.View.prototype.clearTargetedLocs = function () {
+    GCON('TARGETED_LOCS').clear();
+}
 
 
 

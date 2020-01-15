@@ -43,7 +43,7 @@ ARL.World.prototype.generateBasicTile = function () {
         // must always be defined as a type
         aTerrain: 'wall',
         // calculated on the fly
-        aGlyph: '#',
+        aGlyph: GCON('TERRAIN_BASE').wall.tGlyph,
         // calculated on the fly
         // false is the default, enabled true for testing
         aKnown: false,
@@ -88,6 +88,7 @@ ARL.World.prototype.buildGreatHallFloorMap = function () {
     let nX = null;
     let nY = null;
     let physLocs = GCON('PHYS_LOCS').slice();
+    let terrainBase = GCON('TERRAIN_BASE');
     while (physLocs.length) {
         newLoc = physLocs.shift();
         newTile = SIG('generateBasicTile');
@@ -97,10 +98,10 @@ ARL.World.prototype.buildGreatHallFloorMap = function () {
         // this needs to be refactored so that your values aren't hard-coded
         if((nX === '0' || nX === '29') || (nY === '0' || nY === '29')) {
             newTile.aTerrain = 'wall';
-            newTile.aGlyph = '#';
+            newTile.aGlyph = terrainBase.wall.tGlyph;
         } else {
             newTile.aTerrain = 'floor';
-            newTile.aGlyph = '.';
+            newTile.aGlyph = terrainBase.floor.tGlyph;
         }
         newFloorMap[newLoc] = newTile;
     }
@@ -117,6 +118,7 @@ ARL.World.prototype.buildGobboctagonFloorMap = function () {
     let physLocs = GCON('PHYS_LOCS').slice();
     let octaLocs = GCON('PHYS_LOCS').slice();
     let octagon = [];
+    let terrainBase = GCON('TERRAIN_BASE');
     while (octaLocs.length) {
         newLoc = octaLocs.shift();
         [nX, nY] = newLoc.split(',');
@@ -140,10 +142,10 @@ ARL.World.prototype.buildGobboctagonFloorMap = function () {
         // this needs to be refactored so that your values aren't hard-coded
         if(octagon.indexOf(newLoc) === -1) {
             newTile.aTerrain = 'wall';
-            newTile.aGlyph = '#';
+            newTile.aGlyph = terrainBase.wall.tGlyph;
         } else {
             newTile.aTerrain = 'floor';
-            newTile.aGlyph = '.';
+            newTile.aGlyph = terrainBase.floor.tGlyph;
         }
         newFloorMap[newLoc] = newTile;
     }
@@ -179,8 +181,12 @@ ARL.World.prototype.populateFloor = function (aFloor) {
     // ok time to step it up to... 13 mobs
     let mCnt = 13;
     let newMobId = null;
+    let gobbos = ['puncho', 'shooto'];
+    let thisGob = null;
+    let mobPayload = null;
     for (mCnt; mCnt > 0; mCnt -= 1) {
-        newMobId = SIG('generateMob', aFloor);
+        mobPayload = [aFloor, gobbos[SIG('aCoin')]];
+        newMobId = SIG('generateMob', mobPayload);
         GET(newMobId).mPosition.pLocXY = SIG('findAWalkableTile', aFloor);
         GCON('PHYS_MAP')[aFloor][GET(newMobId).mPosition.pLocXY].aBody = newMobId;
         GCON('FLOOR_MAP')[aFloor].fMobs.push(newMobId);
@@ -307,11 +313,12 @@ ARL.World.prototype.generatePlayer = function (aFloor) {
 
 ARL.World.prototype.generateMobs = function () {};
 
-ARL.World.prototype.generateMob = function (aFloor) {
-    // right now we're just doing gobbos, we need better factory methods
+ARL.World.prototype.generateMob = function (params) {
+    // Now with more varied gobbos!
+    let [aFloor, aType] = params;
     let newMob = new ARL.Mob();
-    newMob.mIdentity.iType = GCON('MOB_BASE').gobbo.mType;
-    newMob.mIdentity.iAgent = GCON('MOB_BASE').gobbo.mAgent;
+    newMob.mIdentity.iType = GCON('MOB_BASE')[aType].mType;
+    newMob.mIdentity.iAgent = GCON('MOB_BASE')[aType].mAgent;
     newMob.mPosition.pCurFloor = aFloor;
     let newMobId = SIG('registerEntity', newMob);
     GET(newMobId).mIdentity.iEid = newMobId;
@@ -325,6 +332,12 @@ ARL.World.prototype.mobDeath = function (deadMob) {
     // purge the mob from everywhere it exists
     // purge it from ALL_MOBS
     GCON('ALL_MOBS').splice(GCON('ALL_MOBS').indexOf(deadMob), 1);
+    // purge it from the targeting map
+    GCON('TARGETED_LOCS').forEach(function (aValue, aKey, aMap) {
+        if (GCON('ALL_MOBS').indexOf(aKey) === -1) {
+            aMap.delete(aKey);
+        }
+    });
     // purge it from the floor
     let prevMob = null;
     let prevMobIdx = null;
@@ -367,6 +380,8 @@ ARL.World.prototype.mobDeath = function (deadMob) {
     // IT IS DONE
     if (whoami === 'player') {
         SIG('narrate', 'You lose! Press any key to start a new game.');
+        SIG('clearTargetedLocs');
+        SIG('activateDeathCam');
         SCON('GAME_OVER', true);
     }
     SIG('destroyEntity', deadMob);
@@ -376,6 +391,7 @@ ARL.World.prototype.mobDeath = function (deadMob) {
     if (whoami !== 'player' && mobFloorData.fMobs.length === 1) {
         SIG('narrate', 'You killed all the monsters on this floor!');
         SIG('narrate', 'You win! Press any key to start a new game.');
+        SIG('activateDeathCam');
         SCON('GAME_OVER', true);
     }
 };
@@ -431,6 +447,16 @@ ARL.World.prototype.checkTileVisibility = function (aLoc) {
             physTile.aVisible = true;
         }
     }
+};
+
+ARL.World.prototype.activateDeathCam = function () {
+    // this constant doesn't do anything but it might depending on refactoring
+    SCON('DEATH_CAM', true);
+    let physLocs = GCON('PHYS_LOCS').slice();
+    let playerVision = GCON('PLAYER_MOB').mVision;
+    playerVision.vKnownLocs = physLocs.slice();
+    playerVision.vInViewLocs = physLocs.slice();
+    SIG('handleTileUpdates', physLocs);
 };
 
 

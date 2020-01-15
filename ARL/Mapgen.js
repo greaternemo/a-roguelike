@@ -272,10 +272,12 @@ ARL.Mapgen.prototype.finalizeVariableLayout = function (baseLayout) {
     let curGlyph = '';
     while (baseLayout.length > 0) {
         curGlyph = baseLayout.shift();
-        if (curGlyph === '#') {
-            // We'll say there's a 1 in 4 chance that a wall bill be a pit. Sure.
+        if (curGlyph === GCON('TERRAIN_BASE').wall.tGlyph) {
+            // We'll say there's a 1 in 4 chance that a wall will be a pit. Sure.
             if (SIG('d4') === 1) {
-                curGlyph = '\u2056';
+            //if (SIG('d2') === 1) {
+                curGlyph = GCON('TERRAIN_BASE').abyss.tGlyph;
+                //curGlyph = GCON('TERRAIN_BASE').floor.tGlyph;
             }
         }
         finalLayout.push(curGlyph);
@@ -307,6 +309,8 @@ ARL.Mapgen.prototype.remapNodeLayoutToNodeMap = function (params) {
     while (nodeLocs.length) {
         aGlyph = finalLayout.shift();
         aLoc = nodeLocs.shift();
+        // hacky-ass fix for changing periods to interpuncts
+        if (aGlyph == '.') { aGlyph = '\u00B7' }
         nodeMap[aLoc] = aGlyph;
     }
     // console.log(nodeMap);
@@ -533,7 +537,9 @@ ARL.Mapgen.prototype.generateFloorLayout = function (layoutType) {
     }
 
     // for ensuring a base level of complexity
-    if (usedNodes.length < 30) {
+    // console.log('logging usedNodes: ' + usedNodes.length);
+    // console.log('logging complexityThreshold: ' + GCON('LAYOUT_BASE').complexityThreshold);
+    if (usedNodes.length < GCON('LAYOUT_BASE').complexityThreshold) {
         return SIG('generateFloorLayout', layoutType);
     }
 

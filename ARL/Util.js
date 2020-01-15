@@ -309,30 +309,30 @@ ARL.Util.prototype.getInlineLocsInDir = function (params) {
 
 // Returns a string representing the dir from one loc to another
 ARL.Util.prototype.getDirBetweenTwoLocs = function (params) {
-    let[originLoc, targetLoc] = params;
+    let [originLoc, targetLoc] = params;
     let facingDir = '';
     
-    let[oX, oY] = originLoc.split(',');
+    let [oX, oY] = originLoc.split(',');
     oX = parseInt(oX);
     oY = parseInt(oY);
-    let[tX, tY] = targetLoc.split(',');
+    let [tX, tY] = targetLoc.split(',');
     tX = parseInt(tX);
     tY = parseInt(tY);
 
-    if (mY > pY) {
+    if (oY > tY) {
         // north
         facingDir += 'N';
-    } else if (mY < pY) {
+    } else if (oY < tY) {
         // south
         facingDir += 'S';
     } else {
         // same y coord, nothing
     }
 
-    if (mX > pX) {
+    if (oX > tX) {
         // west
         facingDir += 'W';
-    } else if (mX < pX) {
+    } else if (oX < tX) {
         // east
         facingDir += 'E';
     } else {

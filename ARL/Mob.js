@@ -20,6 +20,8 @@ ARL.Mob = function () {
     // I hate this.
     this.mActionState = {
         asCur: null,
+        asVerb: null,
+        asClock: 0,
     };
     /*
     We can and probably should refactor a bunch of this eventually.

@@ -62,7 +62,7 @@ ARL.Action.prototype.movePlayerWest = function () {
 ARL.Action.prototype.useStairs = function () {};
 
 ARL.Action.prototype.pursueThePlayer = function(aMob) {
-    // We can do this simply because of the way our basic-ass shadowcasting works:
+    // We can do this so simply because of the way our basic-ass shadowcasting works:
     // Any mob that can see the player has line of sight and has no obstacles to avoid.
 
     let[mX, mY] = GET(aMob).mPosition.pLocXY.split(',');
@@ -165,7 +165,7 @@ ARL.Action.prototype.tryToMoveMobInDir = function (mData) {
 };
 
 ARL.Action.prototype.moveMobToLoc = function (mData) {
-    let[aMob, locFrom, locTo] = mData;
+    let [aMob, locFrom, locTo] = mData;
     let physLocFrom = GCON('PHYS_MAP')[GCON('CURRENT_FLOOR')][locFrom];
     let physLocTo = GCON('PHYS_MAP')[GCON('CURRENT_FLOOR')][locTo];
 
@@ -176,9 +176,69 @@ ARL.Action.prototype.moveMobToLoc = function (mData) {
     SIG('handleTileUpdates', [locFrom, locTo]);
 };
 
-ARL.Action.prototype.doARangedAttackInDir = function () {
+ARL.Action.prototype.prepRangedAttackTowardTarget = function (params) {
+    let [aPerp, aVic] = params;
+    GET(aPerp).mActionState.asVerb = 'drawn';
+    GET(aPerp).mActionState.asClock = 1;
+    SIG('addTargetingAtLoc', [aPerp, GET(aVic).mPosition.pLocXY]);
+    let prepStr = 'The ' + GET(aPerp).mIdentity.iType + ' draws their bow!';
+    SIG('narrate', prepStr);
+    SIG('endCurrentTurn');
+};
+
+ARL.Action.prototype.doARangedAttack = function () {
     // yo what's up
     
+};
+
+ARL.Action.prototype.doARangedAttackTowardTarget = function (aMob) {
+    let targetLoc = GCON('TARGETED_LOCS').get(aMob);
+    let originLoc = GET(aMob).mPosition.pLocXY;
+    let targetDir = SIG('getDirBetweenTwoLocs', [originLoc, targetLoc]);
+    let mobRange = GET(aMob).mVision.vFov;
+    let calcPayload = [originLoc, targetDir, mobRange];
+    let inlineLocs = SIG('getInlineLocsInDir', calcPayload);
+    let thisLoc = null;
+    let curFloor = GCON('PHYS_MAP')[GCON('CURRENT_FLOOR')];
+    let fireStr = null;
+    
+    // One of ??? things will happen here:
+    // - If we see unoccupied floor, we keep looking outward.
+    // - If we ONLY see unoccupied floor, we just whiff the shot.
+    // - If we see a mob, we shoot them.
+    // - If we see a wall, we shoot it and whiff the shot.
+    let perpType = GET(aMob).mIdentity.iType;
+    let perpStr = 'The ' + perpType;
+    while (inlineLocs.length > 0) {
+        thisLoc = inlineLocs.shift();
+        if (GCON('TERRAIN_BASE')[curFloor[thisLoc].aTerrain].tFireThru === true) {
+            // if we can fire through this tile and there's someone here, we shoot them
+            if (curFloor[thisLoc].aBody) {
+                let perpType = GET(aMob).mIdentity.iType;
+                let vicType = GET(curFloor[thisLoc].aBody).mIdentity.iType;
+                let vicStr = vicType === 'player' ? 'you' : 'the '+ vicType;
+                fireStr = perpStr + ' fires an arrow at ' + vicStr + '.';
+                SIG('narrate', fireStr);
+                SIG('doAHit', [GET(aMob).mIdentity.iEid, curFloor[thisLoc].aBody]);
+                break;
+            }
+            // if this is the last loc in our targeting line and there's no one here to shoot, we whiff
+            else if (inlineLocs.length === 0) {
+                fireStr = perpStr + ' fires an arrow and watches it whiff and fall to the ground.';
+                SIG('narrate', fireStr);
+                break;
+            }
+            // if we can fire through this tile and there's no one here to hit, we just keep looking
+        } else {
+            // we can't fire through this tile, so we just hit it and whiff
+            let tileName = GCON('TERRAIN_BASE')[curFloor[thisLoc].aTerrain].tName
+            fireStr = perpStr + 'fires an arrow right into the ' + tileName + ' and watches it break.';
+            SIG('narrate', fireStr);
+            break;
+        }
+    }
+    SIG('delTargetingAtLoc', aMob);
+    SIG('endCurrentTurn');
 };
 
 ARL.Action.prototype.doARangedAttackTowardCursor = function () {

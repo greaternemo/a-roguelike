@@ -167,15 +167,38 @@ ARL.BASE = {
                 mHeight: 30,
             },
             cellSize: {
-                cWidth: 14,
-                cHeight: 16,
+                //cWidth: 14,
+                //cHeight: 16,
+                cWidth: 21,
+                cHeight: 24,
             },
             cellOffset: {
                 cLeft: 2,
             },
+            mapStyle: {
+                mFont: '24px monospace',
+                mFillColor: 'black',
+                mTextBaseline: 'bottom',
+            },
+            cursorStyle: {
+                cLineWidth: 2,
+                cColor: 'limegreen',
+            },
+            targetStyle: {
+                cLineWidth: 5,
+                cColor: 'firebrick',
+            },
         },
         
         glyphBase: {
+            unknown: {
+                gColorBG: '#333333',
+                gColorFG: '#333333',
+            },
+            unvisible: {
+                gColorBG: '#333333',
+                gColorFG: 'gray',
+            },
             '@': {
                 gColorBG: 'transparent',
                 gColorFG: 'skyblue',
@@ -185,18 +208,30 @@ ARL.BASE = {
                 //gColorFG: 'darkolivegreen',
                 gColorFG: 'chartreuse',
             },
-            '.': {
-                gColorBG: 'black',
-                gColorFG: 'sienna',
+            'p': {
+                gColorBG: 'transparent',
+                //gColorFG: 'darkolivegreen',
+                gColorFG: 'chartreuse',
+            },
+            's': {
+                gColorBG: 'transparent',
+                //gColorFG: 'darkolivegreen',
+                gColorFG: 'chartreuse',
+            },
+            '\u00B7': {
+                //gColorBG: '#A0522D',
+                gColorBG: '#80522D',
+                gColorFG: '#251C18',
             },
             '#': {
-                gColorBG: 'slategray',
-                gColorFG: 'black',
+                gColorBG: '#708090',
+                gColorFG: '#1F262E',
             },
             '\u2056': {
                 //gColorBG: 'darkslategray',
                 //gColorFG: 'darkslategray',
-                gColorBG: '#222222',
+                //gColorBG: '#222222',
+                gColorBG: '#181818',
                 gColorFG: '#666666',
             },
         },
@@ -211,7 +246,7 @@ ARL.BASE = {
 
         terrainBase: {
             floor: {
-                tGlyph: '.',
+                tGlyph: '\u00B7',
                 tName: 'floor',
                 tFireThru: true,
                 tSeeThru: true,
@@ -253,6 +288,8 @@ ARL.BASE = {
         mobList: [
             'player',
             'gobbo',
+            'puncho',
+            'shooto',
         ],
 
         mobBase: {
@@ -265,6 +302,16 @@ ARL.BASE = {
                 mGlyph: 'g',
                 mType: 'gobbo',
                 mAgent: 'gobbo',
+            },
+            puncho: {
+                mGlyph: 'p',
+                mType: 'puncho',
+                mAgent: 'puncho',
+            },
+            shooto: {
+                mGlyph: 's',
+                mType: 'shooto',
+                mAgent: 'shooto',
             },
         },
 
@@ -292,6 +339,8 @@ ARL.BASE = {
         ],
         
         layoutBase: {
+            //complexityThreshold: 30,
+            complexityThreshold: 10,
             basic: {},
             greatHall: {},
             gobboctagon: {},
@@ -301,19 +350,24 @@ ARL.BASE = {
                     hOffset: 1,
                 },
                 gridSize: {
-                    gWidth: 7,
-                    gHeight: 7,
+                    //gWidth: 7,
+                    //gHeight: 7,
+                    gWidth: 4,
+                    gHeight: 4,
                 },
                 gridLocs: [],
                 nodeSize: {
-                    nWidth: 4,
-                    nHeight: 4,
+                    //nWidth: 4,
+                    //nHeight: 4,
+                    nWidth: 7,
+                    nHeight: 7,
                 },
                 nodeLocs: [],
             },
         },
         
         mapgenBase: {
+            /*
             baseLayout: [
                 "#..#",
                 "....",
@@ -332,6 +386,36 @@ ARL.BASE = {
                 "####",
                 "####",
             ],
+            */
+            baseLayout: [
+                "#.....#",
+                ".......",
+                ".......",
+                ".......",
+                ".......",
+                ".......",
+                "#.....#",
+            ],
+            emptyLayout: [
+                ".......",
+                ".......",
+                ".......",
+                ".......",
+                ".......",
+                ".......",
+                ".......",
+            ],
+            fullLayout: [
+                "#######",
+                "#######",
+                "#######",
+                "#######",
+                "#######",
+                "#######",
+                "#######",
+            ],
+
+            /*
             nodeLayouts: {
                 '000A': [
                     [
@@ -890,6 +974,197 @@ ARL.BASE = {
                     ],
                 ],
             },
+            */
+            nodeLayouts: {
+                '000A': [
+                    [
+                        ".......",
+                        ".......",
+                        ".......",
+                        ".......",
+                        ".......",
+                        ".......",
+                        ".......",
+                    ],
+                ],
+                '0000': [
+                    [
+                        ".......",
+                        ".......",
+                        ".......",
+                        ".......",
+                        ".......",
+                        ".......",
+                        ".......",
+                    ],
+                ],
+                '0001': [
+                    [
+                        "#.....#",
+                        "#......",
+                        "#......",
+                        "#......",
+                        "#......",
+                        "#......",
+                        "#.....#",
+                    ],
+                ],
+                '0010': [
+                    [
+                        "#.....#",
+                        ".......",
+                        ".......",
+                        ".......",
+                        ".......",
+                        ".......",
+                        "#######",
+                    ],
+                ],
+                '0011': [
+                    [
+                        "#.....#",
+                        "#......",
+                        "#......",
+                        "#......",
+                        "#......",
+                        "#......",
+                        "#######",
+                    ],
+                ],
+                '0100': [
+                    [
+                        "#.....#",
+                        "......#",
+                        "......#",
+                        "......#",
+                        "......#",
+                        "......#",
+                        "#.....#",
+                    ],
+                ],
+                '0101': [
+                    [
+                        "#.....#",
+                        "#.....#",
+                        "#.....#",
+                        "#.....#",
+                        "#.....#",
+                        "#.....#",
+                        "#.....#",
+                    ],
+                ],
+                '0110': [
+                    [
+                        "#.....#",
+                        "......#",
+                        "......#",
+                        "......#",
+                        "......#",
+                        "......#",
+                        "#######",
+                    ],
+                ],
+                '0111': [
+                    [
+                        "#.....#",
+                        "#.....#",
+                        "#.....#",
+                        "#.....#",
+                        "#.....#",
+                        "#.....#",
+                        "#######",
+                    ],
+                ],
+                '1000': [
+                    [
+                        "#######",
+                        ".......",
+                        ".......",
+                        ".......",
+                        ".......",
+                        ".......",
+                        "#.....#",
+                    ],
+                ],
+                '1001': [
+                    [
+                        "#######",
+                        "#......",
+                        "#......",
+                        "#......",
+                        "#......",
+                        "#......",
+                        "#.....#",
+                    ],
+                ],
+                '1010': [
+                    [
+                        "#######",
+                        ".......",
+                        ".......",
+                        ".......",
+                        ".......",
+                        ".......",
+                        "#######",
+                    ],
+                ],
+                '1011': [
+                    [
+                        "#######",
+                        "#......",
+                        "#......",
+                        "#......",
+                        "#......",
+                        "#......",
+                        "#######",
+                    ],
+                ],
+                '1100': [
+                    [
+                        "#######",
+                        "......#",
+                        "......#",
+                        "......#",
+                        "......#",
+                        "......#",
+                        "#.....#",
+                    ],
+                ],
+                '1101': [
+                    [
+                        "#######",
+                        "#.....#",
+                        "#.....#",
+                        "#.....#",
+                        "#.....#",
+                        "#.....#",
+                        "#.....#",
+                    ],
+                ],
+                '1110': [
+                    [
+                        "#######",
+                        "......#",
+                        "......#",
+                        "......#",
+                        "......#",
+                        "......#",
+                        "#######",
+                    ],
+                ],
+                '1111': [
+                    [
+                        "#######",
+                        "#######",
+                        "#######",
+                        "#######",
+                        "#######",
+                        "#######",
+                        "#######",
+                    ],
+                ],
+            },
+
             layoutTypes: [
                 'corridors',
                 'ends',
@@ -961,7 +1236,10 @@ ARL.BASE = {
                 'wanderInRandomDir',
                 'tryToMoveMobInDir',
                 'moveMobToLoc',
+                'prepRangedAttackTowardTarget',
+                'doARangedAttack',
                 'doARangedAttackTowardCursor',
+                'doARangedAttackTowardTarget',
                 'doAHit',
                 'changeMobHPCur',
                 'changeMobState',
@@ -974,7 +1252,10 @@ ARL.BASE = {
                 'compelMob',
                 'compelPlayer',
                 'compelGobbo',
+                'compelShooto',
+                'compelPuncho',
                 'canSeeThePlayer',
+                'isInlineWithPlayer',
         ],
         Fov: [
                 // filler line
@@ -1108,6 +1389,9 @@ ARL.BASE = {
                 'delCursorAtLoc',
                 'tryToMoveCursorInDir',
                 'moveCursorToLoc',
+                'addTargetingAtLoc',
+                'delTargetingAtLoc',
+                'clearTargetedLocs',
         ],
         World: [
                 // filler line
@@ -1134,6 +1418,7 @@ ARL.BASE = {
                 'handleTileUpdates',
                 'updateCurrentGlyph',
                 'checkTileVisibility',
+                'activateDeathCam',
         ],
     },
     
@@ -1178,6 +1463,7 @@ ARL.BASE = {
                 'READY_TO_DRAW',    // rw, bool, is the map ready to attempt a redraw
                 'DEATH_CAM',        // rw, bool, if the player is dead, has the whole map been revealed
                 'CURSOR_LOC',       // rw, string, view loc that currently has the cursor on it for targeting
+                'TARGETED_LOCS',    // rw, map, tiles to highlight for targeting, keyed by mob eid 
 
                 'CURRENT_FLOOR',    // rw, string, name of the floor the player is on
                 'FLOOR_LIST',       // ro, array, floor names as strings
