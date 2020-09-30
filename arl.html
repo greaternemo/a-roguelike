@@ -87,7 +87,27 @@
     </body>
     
     <script src="ARL.js"></script>
+    <!-- <script src="ARL/BASEold.js"></script> -->
     <script src="ARL/BASE.js"></script>
+    <script src="ARL/BASE/Constants.js"></script>
+    <script src="ARL/BASE/RefData.js"></script>
+    <script src="ARL/BASE/Routes.js"></script>
+    <script src="ARL/BASE/Schema.js"></script>
+    <script src="ARL/BASE/RefData/floorCore.js"></script>
+    <script src="ARL/BASE/RefData/gameCore.js"></script>
+    <script src="ARL/BASE/RefData/glyphCore.js"></script>
+    <script src="ARL/BASE/RefData/inputCore.js"></script>
+    <script src="ARL/BASE/RefData/mapgenCore.js"></script>
+    <script src="ARL/BASE/RefData/mobCore.js"></script>
+    <script src="ARL/BASE/RefData/physCore.js"></script>
+    <script src="ARL/BASE/RefData/terrainCore.js"></script>
+    <script src="ARL/BASE/RefData/viewCore.js"></script>
+    <script src="ARL/BASE/RefData/worldCore.js"></script>
+    <!-- 
+        It is important that worldCore.js be imported last out of the BASE scripts
+        because it contains the lookup table generation code that requires the other
+        data to be in place in BASE already.
+    -->
     <script src="ARL/Registry.js"></script>
     <script src="ARL/Router.js"></script>
     <script src="ARL/Util.js"></script>

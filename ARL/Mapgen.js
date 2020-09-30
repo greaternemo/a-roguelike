@@ -270,14 +270,29 @@ ARL.Mapgen.prototype.finalizeVariableLayout = function (baseLayout) {
     // Right now we're just gonna mess with the walls. Simple.
     let finalLayout = [];
     let curGlyph = '';
+    let curRoll;
     while (baseLayout.length > 0) {
         curGlyph = baseLayout.shift();
+        //console.log(curGlyph);
+        //console.log(GCON('TERRAIN_BASE').floor.tGlyph);
         if (curGlyph === GCON('TERRAIN_BASE').wall.tGlyph) {
-            // We'll say there's a 1 in 4 chance that a wall will be a pit. Sure.
-            if (SIG('d4') === 1) {
-            //if (SIG('d2') === 1) {
+            // We'll say there's a 1 in 6 chance that a wall will be a pit. Sure.
+            // There's a 2 in 6 chance that a wall will be a grate.
+            curRoll = SIG('d6');
+            if (curRoll === 1) {
                 curGlyph = GCON('TERRAIN_BASE').abyss.tGlyph;
                 //curGlyph = GCON('TERRAIN_BASE').floor.tGlyph;
+            }
+            if (curRoll === 2 || curRoll === 3) {
+                curGlyph = GCON('TERRAIN_BASE').grate.tGlyph;
+            }
+        }
+        else if (curGlyph === GCON('TERRAIN_BASE').floor.tGlyph) {
+            //console.log('made it');
+            // We'll say there's a 1 in 6 chance that a floor will be reeds.
+            curRoll = SIG('d6');
+            if (curRoll === 1) {
+                curGlyph = GCON('TERRAIN_BASE').reeds.tGlyph;
             }
         }
         finalLayout.push(curGlyph);
@@ -310,7 +325,7 @@ ARL.Mapgen.prototype.remapNodeLayoutToNodeMap = function (params) {
         aGlyph = finalLayout.shift();
         aLoc = nodeLocs.shift();
         // hacky-ass fix for changing periods to interpuncts
-        if (aGlyph == '.') { aGlyph = '\u00B7' }
+        // if (aGlyph == '.') { aGlyph = '\u00B7' }
         nodeMap[aLoc] = aGlyph;
     }
     // console.log(nodeMap);
